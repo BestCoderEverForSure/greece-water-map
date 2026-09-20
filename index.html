@@ -42,6 +42,15 @@
   .nudge.show { display: flex; }
   .nudge button { border: 0; border-radius: 8px; background: var(--accent); color: #fff; padding: 4px 10px; font-weight: 600; }
   .pop .dir { display: inline-block; margin-top: 8px; background: var(--accent); color: #fff !important; text-decoration: none; padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 13px; }
+  .rctl { padding: 0 16px 8px; font-size: 13px; }
+  .rctl[hidden] { display: none; }
+  .rsum { font-weight: 600; margin-bottom: 2px; }
+  .rnote { color: var(--muted); margin-bottom: 6px; }
+  .rbtns { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .rbtns button { border: 1.5px solid var(--line); background: none; border-radius: 999px; padding: 3px 10px; }
+  .rbtns button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .rbtns .clear { margin-left: auto; }
+  body.drag::after { content: "GPX"; position: fixed; inset: 0; z-index: 9; display: grid; place-items: center; font-size: 42px; font-weight: 700; color: #fff; background: rgba(20,120,212,.55); }
   .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--card); border-radius: 18px 18px 0 0; box-shadow: 0 -2px 14px rgba(0,0,0,.2); z-index: 3; max-height: 55%; display: flex; flex-direction: column; transform: translateY(calc(100% - 46px)); transition: transform .25s ease; padding-bottom: env(safe-area-inset-bottom); }
   .sheet.open { transform: none; }
   .grab { border: 0; background: none; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; width: 100%; font-weight: 600; }
@@ -89,8 +98,14 @@
 
 <section class="sheet" id="sheet" aria-live="polite">
   <button class="grab" id="grab"><span id="sheetTitle"></span><span id="chev">▲</span></button>
+  <div class="rctl" id="rctl" hidden>
+    <div class="rsum" id="rsum"></div>
+    <div class="rnote" id="rnote"></div>
+    <div class="rbtns"><span data-i="within"></span><span id="rbtns"></span><button class="clear" id="rclear" data-i="clearRoute"></button></div>
+  </div>
   <ul class="list" id="list"></ul>
 </section>
+<input type="file" id="gpxIn" accept=".gpx,application/gpx+xml,text/xml,application/xml" hidden>
 
 <dialog id="mdlg">
   <h2 data-i="missingTitle"></h2>
@@ -114,7 +129,7 @@
 "use strict";
 const T = {
   el: {
-    title: "Πόσιμο νερό", near: "Κοντά μου", ok: "ΟΚ", missing: "Λείπει βρύση;", directions: "Οδηγίες", streetView: "Street View", checked: "Τελευταίος έλεγχος", feedback: "Σχόλια ή προβλήματα στη σελίδα", cancel: "Άκυρο", missingGo: "Άνοιγμα σημείωσης", missingTitle: "Λείπει μια βρύση;", missingBody: "Θα ανοίξει μια σημείωση στο OpenStreetMap στο σημείο που βλέπεις τώρα στον χάρτη. Πρώτα μετακίνησε τον χάρτη πάνω στο σημείο. Στη σημείωση γράψε τι είναι (βρύση, κάνουλα, πηγή), πού ακριβώς βρίσκεται και αν τρέχει νερό.", sparse: n => n === 0 ? "Δεν έχουμε κανένα σημείο εδώ. Ξέρεις κάποιο;" : `Μόνο ${n} ${n === 1 ? "σημείο" : "σημεία"} εδώ. Ξέρεις κάποιο που λείπει;`, sparseCta: "Πρόσθεσε", updated: "Δεδομένα από", privacy: "Η τοποθεσία σου μένει στη συσκευή σου και δεν αποθηκεύεται.", athens: "Αθήνα", thess: "Θεσσαλονίκη",
+    title: "Πόσιμο νερό", near: "Κοντά μου", ok: "ΟΚ", missing: "Λείπει βρύση;", directions: "Οδηγίες", route: "Διαδρομή GPX", routeTitle: "Κατά μήκος της διαδρομής", within: "Απόσταση:", clearRoute: "Καθαρισμός", routeErr: "Δεν βρέθηκε διαδρομή σε αυτό το αρχείο GPX.", routeNone: "Δεν βρέθηκαν σημεία κοντά στη διαδρομή. Πάρε νερό μαζί σου.", routeNote: "Μετράει μόνο σημεία που ξέρουμε, ίσως υπάρχουν κι άλλα.", routeSum: (len, n, gap) => `${len} χλμ · ${n} σημεία · Μεγαλύτερο διάστημα χωρίς νερό: ${gap} χλμ`, streetView: "Street View", checked: "Τελευταίος έλεγχος", feedback: "Σχόλια ή προβλήματα στη σελίδα", cancel: "Άκυρο", missingGo: "Άνοιγμα σημείωσης", missingTitle: "Λείπει μια βρύση;", missingBody: "Θα ανοίξει μια σημείωση στο OpenStreetMap στο σημείο που βλέπεις τώρα στον χάρτη. Πρώτα μετακίνησε τον χάρτη πάνω στο σημείο. Στη σημείωση γράψε τι είναι (βρύση, κάνουλα, πηγή), πού ακριβώς βρίσκεται και αν τρέχει νερό.", sparse: n => n === 0 ? "Δεν έχουμε κανένα σημείο εδώ. Ξέρεις κάποιο;" : `Μόνο ${n} ${n === 1 ? "σημείο" : "σημεία"} εδώ. Ξέρεις κάποιο που λείπει;`, sparseCta: "Πρόσθεσε", updated: "Δεδομένα από", privacy: "Η τοποθεσία σου και τα αρχεία GPX μένουν στη συσκευή σου και δεν ανεβαίνουν πουθενά.", athens: "Αθήνα", thess: "Θεσσαλονίκη",
     fountain: "Βρύση", tap: "Κάνουλα", spring: "Πηγή", unnamed: "Χωρίς όνομα",
     nearest: "Πιο κοντινές", nearestNone: "Πάτα «Κοντά μου» για να δεις τις πιο κοντινές βρύσες.",
     locating: "Εντοπισμός…", locFail: "Δεν βρέθηκε η τοποθεσία σου. Έλεγξε τα δικαιώματα του browser.",
@@ -129,7 +144,7 @@ const T = {
     aboutMissing: "Βρήκες μια βρύση που λείπει ή δεν δουλεύει; Πάτα «Πρόβλημα / λείπει κάτι;» σε οποιοδήποτε σημείο, ή δες τη σελίδα OpenStreetMap για να την προσθέσεις.",
   },
   en: {
-    title: "Drinking water", near: "Near me", ok: "OK", missing: "Missing a fountain?", directions: "Directions", streetView: "Street View", checked: "Last checked", feedback: "Feedback or problems with this page", cancel: "Cancel", missingGo: "Open note", missingTitle: "Missing a fountain?", missingBody: "This opens an OpenStreetMap note at the spot you see on the map now. First move the map onto the spot. In the note, say what it is (fountain, tap, spring), exactly where it is, and whether water flows.", sparse: n => n === 0 ? "No points here yet. Know one?" : `Only ${n} ${n === 1 ? "point" : "points"} here. Know one that's missing?`, sparseCta: "Add", updated: "Data from", privacy: "Your location stays on your device and isn't stored.", athens: "Athens", thess: "Thessaloniki",
+    title: "Drinking water", near: "Near me", ok: "OK", missing: "Missing a fountain?", directions: "Directions", route: "Route (GPX)", routeTitle: "Along the route", within: "Within:", clearRoute: "Clear", routeErr: "No route found in that GPX file.", routeNone: "No points found near this route. Carry water.", routeNote: "Counts only points we know about, more may exist.", routeSum: (len, n, gap) => `${len} km · ${n} points · Longest stretch without water: ${gap} km`, streetView: "Street View", checked: "Last checked", feedback: "Feedback or problems with this page", cancel: "Cancel", missingGo: "Open note", missingTitle: "Missing a fountain?", missingBody: "This opens an OpenStreetMap note at the spot you see on the map now. First move the map onto the spot. In the note, say what it is (fountain, tap, spring), exactly where it is, and whether water flows.", sparse: n => n === 0 ? "No points here yet. Know one?" : `Only ${n} ${n === 1 ? "point" : "points"} here. Know one that's missing?`, sparseCta: "Add", updated: "Data from", privacy: "Your location and GPX files stay on your device and aren't uploaded.", athens: "Athens", thess: "Thessaloniki",
     fountain: "Fountain", tap: "Tap", spring: "Spring", unnamed: "Unnamed",
     nearest: "Nearest", nearestNone: "Tap “Near me” to see the closest fountains.",
     locating: "Locating…", locFail: "Couldn't get your location. Check your browser permissions.",
@@ -181,6 +196,7 @@ function applyFilter() {
   map.setFilter("points", ["all", ["!", ["has", "point_count"]], f]);
   // Clusters are computed from the source, so rebuild the source with filtered data.
   map.getSource("water").setData({ type: "FeatureCollection", features: data.features.filter(visible) });
+  if (route) computeHits();
   renderList();
   $("count").textContent = t("points")(data.features.filter(visible).length);
 }
@@ -201,10 +217,16 @@ function renderChips() {
     b.onclick = () => map.flyTo({ center, zoom: 13.5 });
     box.append(b);
   }
+  const g = document.createElement("button");
+  g.className = "chip city"; g.textContent = "\u2934 " + t("route");
+  g.onclick = () => $("gpxIn").click();
+  box.append(g);
 }
 
 function renderList() {
   const ul = $("list"); ul.textContent = "";
+  $("rctl").hidden = !route;
+  if (route) return renderRouteList(ul);
   $("sheetTitle").textContent = t("nearest");
   if (!userPos) { const p = document.createElement("p"); p.className = "empty"; p.textContent = t("nearestNone"); ul.append(p); return; }
   const near = data.features.filter(visible)
@@ -281,6 +303,117 @@ $("missing").onclick = openMissing;
 $("nudgeBtn").onclick = openMissing;
 $("mCancel").onclick = () => $("mdlg").close();
 $("missingGo").addEventListener("click", () => $("mdlg").close());
+
+// ---- GPX route: draw a route and list the water points along it (all client-side)
+let route = null, routeMax = 300, routeHits = [];
+const ROUTE_STEPS = [150, 300, 600];
+
+function parseGpx(text) {
+  const doc = new DOMParser().parseFromString(text, "application/xml");
+  if (doc.querySelector("parsererror")) return null;
+  let pts = [...doc.getElementsByTagName("trkpt")];
+  if (!pts.length) pts = [...doc.getElementsByTagName("rtept")];
+  const coords = pts.map(p => [parseFloat(p.getAttribute("lon")), parseFloat(p.getAttribute("lat"))])
+    .filter(c => isFinite(c[0]) && isFinite(c[1]));
+  return coords.length >= 2 ? coords : null;
+}
+
+function buildRoute(full) {
+  const cumFull = [0];
+  for (let i = 1; i < full.length; i++) cumFull.push(cumFull[i - 1] + haversine(full[i - 1], full[i]));
+  const step = Math.max(1, Math.ceil(full.length / 2500)), coords = [], cum = [];
+  for (let i = 0; i < full.length; i += step) { coords.push(full[i]); cum.push(cumFull[i]); }
+  if ((full.length - 1) % step) { coords.push(full[full.length - 1]); cum.push(cumFull[full.length - 1]); }
+  return { coords, cum, total: cumFull[full.length - 1] };
+}
+
+function segDist(p, a, b) {
+  const k = Math.cos(p[1] * Math.PI / 180), R = 111320;
+  const ax = (a[0] - p[0]) * k * R, ay = (a[1] - p[1]) * R, bx = (b[0] - p[0]) * k * R, by = (b[1] - p[1]) * R;
+  const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
+  let u = l2 ? -(ax * dx + ay * dy) / l2 : 0; u = Math.max(0, Math.min(1, u));
+  return [Math.hypot(ax + u * dx, ay + u * dy), u];
+}
+
+function computeHits() {
+  const c = route.coords;
+  let w = 180, e = -180, s = 90, n = -90;
+  for (const [x, y] of c) { w = Math.min(w, x); e = Math.max(e, x); s = Math.min(s, y); n = Math.max(n, y); }
+  const dLat = routeMax * 1.2 / 111320, dLon = dLat / Math.cos(((s + n) / 2) * Math.PI / 180);
+  routeHits = [];
+  for (const f of data.features) {
+    if (!visible(f)) continue;
+    const p = f.geometry.coordinates;
+    if (p[0] < w - dLon || p[0] > e + dLon || p[1] < s - dLat || p[1] > n + dLat) continue;
+    let best = Infinity, along = 0;
+    for (let i = 0; i < c.length - 1; i++) {
+      const [d, u] = segDist(p, c[i], c[i + 1]);
+      if (d < best) { best = d; along = route.cum[i] + u * (route.cum[i + 1] - route.cum[i]); }
+    }
+    if (best <= routeMax) routeHits.push({ f, d: best, along });
+  }
+  routeHits.sort((a, b) => a.along - b.along);
+  const src = map.getSource("routehits");
+  if (src) src.setData({ type: "FeatureCollection", features: routeHits.map(h => h.f) });
+}
+
+function renderRouteList(ul) {
+  $("sheetTitle").textContent = `${t("routeTitle")} (${routeHits.length})`;
+  const marks = [0, ...routeHits.map(h => h.along), route.total];
+  let gap = 0; for (let i = 1; i < marks.length; i++) gap = Math.max(gap, marks[i] - marks[i - 1]);
+  $("rsum").textContent = t("routeSum")((route.total / 1000).toFixed(1), routeHits.length, (gap / 1000).toFixed(1));
+  $("rnote").textContent = t("routeNote");
+  const box = $("rbtns"); box.textContent = "";
+  for (const m of ROUTE_STEPS) {
+    const b = document.createElement("button");
+    b.textContent = m + " " + t("m"); b.setAttribute("aria-pressed", m === routeMax);
+    b.onclick = () => { routeMax = m; computeHits(); renderList(); };
+    box.append(b);
+  }
+  if (!routeHits.length) { const p = document.createElement("p"); p.className = "empty"; p.textContent = t("routeNone"); ul.append(p); return; }
+  for (const { f, d, along } of routeHits) {
+    const li = document.createElement("li"), b = document.createElement("button");
+    const dot = document.createElement("span"); dot.className = "dot"; dot.style.background = KINDS[f.properties.kind];
+    const nm = document.createElement("span"); nm.textContent = labelOf(f.properties);
+    const ds = document.createElement("span"); ds.className = "dist";
+    ds.textContent = `${(along / 1000).toFixed(1)} ${t("km")} · ${fmtDist(d)}`;
+    b.append(dot, nm, ds); b.onclick = () => { focusOn(f); setSheet(false); };
+    li.append(b); ul.append(li);
+  }
+}
+
+function setRouteOnMap() {
+  const line = { type: "Feature", geometry: { type: "LineString", coordinates: route.coords } };
+  if (map.getSource("route")) { map.getSource("route").setData(line); return; }
+  map.addSource("route", { type: "geojson", data: line });
+  map.addSource("routehits", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+  map.addLayer({ id: "route-casing", type: "line", source: "route", layout: { "line-join": "round", "line-cap": "round" }, paint: { "line-color": "#fff", "line-width": 7 } }, "clusters");
+  map.addLayer({ id: "route-line", type: "line", source: "route", layout: { "line-join": "round", "line-cap": "round" }, paint: { "line-color": "#ff6b00", "line-width": 4 } }, "clusters");
+  map.addLayer({ id: "route-hits", type: "circle", source: "routehits", paint: { "circle-radius": 12, "circle-color": "rgba(255,107,0,0.18)", "circle-stroke-color": "#ff6b00", "circle-stroke-width": 2.5 } }, "clusters");
+}
+
+function loadGpxText(text) {
+  const full = parseGpx(text);
+  if (!full) { alert(t("routeErr")); return; }
+  route = buildRoute(full);
+  setRouteOnMap(); computeHits(); renderList(); setSheet(true);
+  const b = route.coords.reduce((bb, c) => bb.extend(c), new maplibregl.LngLatBounds(route.coords[0], route.coords[0]));
+  map.fitBounds(b, { padding: { top: 120, bottom: 240, left: 40, right: 40 }, maxZoom: 16 });
+}
+
+function clearRoute() {
+  route = null; routeHits = [];
+  for (const id of ["route-hits", "route-line", "route-casing"]) if (map.getLayer(id)) map.removeLayer(id);
+  for (const id of ["routehits", "route"]) if (map.getSource(id)) map.removeSource(id);
+  renderList();
+}
+
+async function handleGpxFile(file) { if (file) loadGpxText(await file.text()); }
+$("gpxIn").onchange = e => { handleGpxFile(e.target.files[0]); e.target.value = ""; };
+$("rclear").onclick = clearRoute;
+addEventListener("dragover", e => { e.preventDefault(); document.body.classList.add("drag"); });
+addEventListener("dragleave", () => document.body.classList.remove("drag"));
+addEventListener("drop", e => { e.preventDefault(); document.body.classList.remove("drag"); handleGpxFile(e.dataTransfer.files[0]); });
 
 function applyLang() {
   document.documentElement.lang = lang;
