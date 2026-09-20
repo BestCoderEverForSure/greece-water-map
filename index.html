@@ -131,14 +131,7 @@
 "use strict";
 // Optional integrations. Fill these in to switch them on (empty = off).
 const DONATE_URL = "https://ko-fi.com/turbowater";   // e.g. a Ko-fi or GitHub Sponsors page
-const CF_BEACON = "2c68d58ae22d42a796ba8ac800439153";    // Cloudflare Web Analytics site token (cookie-free visit counter)
 const GOATCOUNTER = "";  // your GoatCounter code, e.g. "greece-water" (cookie-free visit counter)
-if (CF_BEACON) {
-  const cf = document.createElement("script");
-  cf.type = "module"; cf.src = "https://static.cloudflareinsights.com/beacon.min.js";
-  cf.dataset.cfBeacon = JSON.stringify({ token: CF_BEACON });
-  document.head.append(cf);
-}
 if (GOATCOUNTER) {
   const gc = document.createElement("script");
   gc.async = true; gc.src = "https://gc.zgo.at/count.js";
@@ -476,8 +469,9 @@ map.on("style.load", async () => {
   applyFilter(); $("updated").textContent = `${t("updated")} OpenStreetMap: ${data.generated || "?"}`; updateNudge();
 });
 if (DONATE_URL) { $("donate").hidden = false; $("donateLink").href = DONATE_URL; }
-if (GOATCOUNTER || CF_BEACON) $("stats").hidden = false;
+$("stats").hidden = false;
 applyLang();
 </script>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "2c68d58ae22d42a796ba8ac800439153"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>
