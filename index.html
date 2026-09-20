@@ -120,6 +120,8 @@
   <p data-i="aboutMissing"></p>
   <p data-i="privacy"></p>
   <p id="updated"></p>
+  <p id="donate" hidden><a id="donateLink" target="_blank" rel="noopener" data-i="donate"></a></p>
+  <p id="stats" hidden data-i="statsNote"></p>
   <p><a href="https://github.com/BestCoderEverForSure/greece-water-map/issues" target="_blank" rel="noopener" data-i="feedback"></a></p>
   <div class="row"><button class="primary" id="closeDlg" data-i="ok"></button></div>
 </dialog>
@@ -127,9 +129,18 @@
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script>
 "use strict";
+// Optional integrations. Fill these in to switch them on (empty = off).
+const DONATE_URL = "";   // e.g. a Ko-fi or GitHub Sponsors page
+const GOATCOUNTER = "";  // your GoatCounter code, e.g. "greece-water" (cookie-free visit counter)
+if (GOATCOUNTER) {
+  const gc = document.createElement("script");
+  gc.async = true; gc.src = "https://gc.zgo.at/count.js";
+  gc.dataset.goatcounter = `https://${GOATCOUNTER}.goatcounter.com/count`;
+  document.head.append(gc);
+}
 const T = {
   el: {
-    title: "Πόσιμο νερό", near: "Κοντά μου", ok: "ΟΚ", missing: "Λείπει βρύση;", directions: "Οδηγίες", route: "Διαδρομή GPX", routeTitle: "Κατά μήκος της διαδρομής", within: "Απόσταση:", clearRoute: "Καθαρισμός", routeErr: "Δεν βρέθηκε διαδρομή σε αυτό το αρχείο GPX.", routeNone: "Δεν βρέθηκαν σημεία κοντά στη διαδρομή. Πάρε νερό μαζί σου.", routeNote: "Μετράει μόνο σημεία που ξέρουμε, ίσως υπάρχουν κι άλλα.", routeSum: (len, n, gap) => `${len} χλμ · ${n} σημεία · Μεγαλύτερο διάστημα χωρίς νερό: ${gap} χλμ`, streetView: "Street View", checked: "Τελευταίος έλεγχος", feedback: "Σχόλια ή προβλήματα στη σελίδα", cancel: "Άκυρο", missingGo: "Άνοιγμα σημείωσης", missingTitle: "Λείπει μια βρύση;", missingBody: "Θα ανοίξει μια σημείωση στο OpenStreetMap στο σημείο που βλέπεις τώρα στον χάρτη. Πρώτα μετακίνησε τον χάρτη πάνω στο σημείο. Στη σημείωση γράψε τι είναι (βρύση, κάνουλα, πηγή), πού ακριβώς βρίσκεται και αν τρέχει νερό.", sparse: n => n === 0 ? "Δεν έχουμε κανένα σημείο εδώ. Ξέρεις κάποιο;" : `Μόνο ${n} ${n === 1 ? "σημείο" : "σημεία"} εδώ. Ξέρεις κάποιο που λείπει;`, sparseCta: "Πρόσθεσε", updated: "Δεδομένα από", privacy: "Η τοποθεσία σου και τα αρχεία GPX μένουν στη συσκευή σου και δεν ανεβαίνουν πουθενά.", athens: "Αθήνα", thess: "Θεσσαλονίκη",
+    title: "Πόσιμο νερό", near: "Κοντά μου", ok: "ΟΚ", missing: "Λείπει βρύση;", directions: "Οδηγίες", donate: "Σου αρέσει ο χάρτης; Κέρασε έναν καφέ ☕", statsNote: "Μετράμε τις επισκέψεις χωρίς cookies και χωρίς προσωπικά στοιχεία.", route: "Διαδρομή GPX", routeTitle: "Κατά μήκος της διαδρομής", within: "Απόσταση:", clearRoute: "Καθαρισμός", routeErr: "Δεν βρέθηκε διαδρομή σε αυτό το αρχείο GPX.", routeNone: "Δεν βρέθηκαν σημεία κοντά στη διαδρομή. Πάρε νερό μαζί σου.", routeNote: "Μετράει μόνο σημεία που ξέρουμε, ίσως υπάρχουν κι άλλα.", routeSum: (len, n, gap) => `${len} χλμ · ${n} σημεία · Μεγαλύτερο διάστημα χωρίς νερό: ${gap} χλμ`, streetView: "Street View", checked: "Τελευταίος έλεγχος", feedback: "Σχόλια ή προβλήματα στη σελίδα", cancel: "Άκυρο", missingGo: "Άνοιγμα σημείωσης", missingTitle: "Λείπει μια βρύση;", missingBody: "Θα ανοίξει μια σημείωση στο OpenStreetMap στο σημείο που βλέπεις τώρα στον χάρτη. Πρώτα μετακίνησε τον χάρτη πάνω στο σημείο. Στη σημείωση γράψε τι είναι (βρύση, κάνουλα, πηγή), πού ακριβώς βρίσκεται και αν τρέχει νερό.", sparse: n => n === 0 ? "Δεν έχουμε κανένα σημείο εδώ. Ξέρεις κάποιο;" : `Μόνο ${n} ${n === 1 ? "σημείο" : "σημεία"} εδώ. Ξέρεις κάποιο που λείπει;`, sparseCta: "Πρόσθεσε", updated: "Δεδομένα από", privacy: "Η τοποθεσία σου και τα αρχεία GPX μένουν στη συσκευή σου και δεν ανεβαίνουν πουθενά.", athens: "Αθήνα", thess: "Θεσσαλονίκη",
     fountain: "Βρύση", tap: "Κάνουλα", spring: "Πηγή", unnamed: "Χωρίς όνομα",
     nearest: "Πιο κοντινές", nearestNone: "Πάτα «Κοντά μου» για να δεις τις πιο κοντινές βρύσες.",
     locating: "Εντοπισμός…", locFail: "Δεν βρέθηκε η τοποθεσία σου. Έλεγξε τα δικαιώματα του browser.",
@@ -144,7 +155,7 @@ const T = {
     aboutMissing: "Βρήκες μια βρύση που λείπει ή δεν δουλεύει; Πάτα «Πρόβλημα / λείπει κάτι;» σε οποιοδήποτε σημείο, ή δες τη σελίδα OpenStreetMap για να την προσθέσεις.",
   },
   en: {
-    title: "Drinking water", near: "Near me", ok: "OK", missing: "Missing a fountain?", directions: "Directions", route: "Route (GPX)", routeTitle: "Along the route", within: "Within:", clearRoute: "Clear", routeErr: "No route found in that GPX file.", routeNone: "No points found near this route. Carry water.", routeNote: "Counts only points we know about, more may exist.", routeSum: (len, n, gap) => `${len} km · ${n} points · Longest stretch without water: ${gap} km`, streetView: "Street View", checked: "Last checked", feedback: "Feedback or problems with this page", cancel: "Cancel", missingGo: "Open note", missingTitle: "Missing a fountain?", missingBody: "This opens an OpenStreetMap note at the spot you see on the map now. First move the map onto the spot. In the note, say what it is (fountain, tap, spring), exactly where it is, and whether water flows.", sparse: n => n === 0 ? "No points here yet. Know one?" : `Only ${n} ${n === 1 ? "point" : "points"} here. Know one that's missing?`, sparseCta: "Add", updated: "Data from", privacy: "Your location and GPX files stay on your device and aren't uploaded.", athens: "Athens", thess: "Thessaloniki",
+    title: "Drinking water", near: "Near me", ok: "OK", missing: "Missing a fountain?", directions: "Directions", donate: "Like the map? Buy me a coffee ☕", statsNote: "We count visits without cookies or personal data.", route: "Route (GPX)", routeTitle: "Along the route", within: "Within:", clearRoute: "Clear", routeErr: "No route found in that GPX file.", routeNone: "No points found near this route. Carry water.", routeNote: "Counts only points we know about, more may exist.", routeSum: (len, n, gap) => `${len} km · ${n} points · Longest stretch without water: ${gap} km`, streetView: "Street View", checked: "Last checked", feedback: "Feedback or problems with this page", cancel: "Cancel", missingGo: "Open note", missingTitle: "Missing a fountain?", missingBody: "This opens an OpenStreetMap note at the spot you see on the map now. First move the map onto the spot. In the note, say what it is (fountain, tap, spring), exactly where it is, and whether water flows.", sparse: n => n === 0 ? "No points here yet. Know one?" : `Only ${n} ${n === 1 ? "point" : "points"} here. Know one that's missing?`, sparseCta: "Add", updated: "Data from", privacy: "Your location and GPX files stay on your device and aren't uploaded.", athens: "Athens", thess: "Thessaloniki",
     fountain: "Fountain", tap: "Tap", spring: "Spring", unnamed: "Unnamed",
     nearest: "Nearest", nearestNone: "Tap “Near me” to see the closest fountains.",
     locating: "Locating…", locFail: "Couldn't get your location. Check your browser permissions.",
@@ -454,6 +465,8 @@ map.on("load", async () => {
   }
   applyFilter(); $("updated").textContent = `${t("updated")} OpenStreetMap: ${data.generated || "?"}`; updateNudge();
 });
+if (DONATE_URL) { $("donate").hidden = false; $("donateLink").href = DONATE_URL; }
+if (GOATCOUNTER) $("stats").hidden = false;
 applyLang();
 </script>
 </body>
