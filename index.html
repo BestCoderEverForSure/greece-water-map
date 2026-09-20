@@ -38,6 +38,10 @@
   .chip.city { background: color-mix(in srgb, var(--accent) 12%, var(--card)); border-color: transparent; font-weight: 600; }
   .fab { position: absolute; right: 10px; bottom: 150px; z-index: 2; display: flex; align-items: center; gap: 6px; background: var(--accent); color: #fff; border: 0; border-radius: 999px; padding: 10px 14px; box-shadow: var(--shadow); font-weight: 600; text-decoration: none; }
   .fab:hover { filter: brightness(1.08); }
+  .nudge { align-self: flex-start; display: none; align-items: center; gap: 8px; background: var(--card); border-radius: 12px; padding: 7px 8px 7px 12px; box-shadow: var(--shadow); font-size: 13px; }
+  .nudge.show { display: flex; }
+  .nudge button { border: 0; border-radius: 8px; background: var(--accent); color: #fff; padding: 4px 10px; font-weight: 600; }
+  .pop .dir { display: inline-block; margin-top: 8px; background: var(--accent); color: #fff !important; text-decoration: none; padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 13px; }
   .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--card); border-radius: 18px 18px 0 0; box-shadow: 0 -2px 14px rgba(0,0,0,.2); z-index: 3; max-height: 55%; display: flex; flex-direction: column; transform: translateY(calc(100% - 46px)); transition: transform .25s ease; padding-bottom: env(safe-area-inset-bottom); }
   .sheet.open { transform: none; }
   .grab { border: 0; background: none; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; width: 100%; font-weight: 600; }
@@ -76,9 +80,10 @@
     <button class="icon" id="lang">EN</button>
   </div>
   <div class="chips" id="chips"></div>
+  <div class="nudge" id="nudge"><span id="nudgeText"></span><button id="nudgeBtn" data-i="sparseCta"></button></div>
 </div>
 
-<a class="fab" id="missing" target="_blank" rel="noopener"><span aria-hidden="true">＋</span><span data-i="missing"></span></a>
+<button class="fab" id="missing"><span aria-hidden="true">＋</span><span data-i="missing"></span></button>
 
 <div class="foot">© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a></div>
 
@@ -87,11 +92,19 @@
   <ul class="list" id="list"></ul>
 </section>
 
+<dialog id="mdlg">
+  <h2 data-i="missingTitle"></h2>
+  <p data-i="missingBody"></p>
+  <div class="row"><button class="icon" id="mCancel" data-i="cancel"></button><a class="primary" id="missingGo" target="_blank" rel="noopener" data-i="missingGo"></a></div>
+</dialog>
+
 <dialog id="dlg">
   <h2 data-i="aboutTitle"></h2>
   <p data-i="aboutBody"></p>
   <p data-i="aboutSafety"></p>
   <p data-i="aboutMissing"></p>
+  <p data-i="privacy"></p>
+  <p id="updated"></p>
   <div class="row"><button class="primary" id="closeDlg" data-i="ok"></button></div>
 </dialog>
 
@@ -100,7 +113,7 @@
 "use strict";
 const T = {
   el: {
-    title: "Πόσιμο νερό", near: "Κοντά μου", ok: "ΟΚ", missing: "Λείπει βρύση;", athens: "Αθήνα", thess: "Θεσσαλονίκη",
+    title: "Πόσιμο νερό", near: "Κοντά μου", ok: "ΟΚ", missing: "Λείπει βρύση;", directions: "Οδηγίες", cancel: "Άκυρο", missingGo: "Άνοιγμα σημείωσης", missingTitle: "Λείπει μια βρύση;", missingBody: "Θα ανοίξει μια σημείωση στο OpenStreetMap στο σημείο που βλέπεις τώρα στον χάρτη. Πρώτα μετακίνησε τον χάρτη πάνω στο σημείο. Στη σημείωση γράψε τι είναι (βρύση, κάνουλα, πηγή), πού ακριβώς βρίσκεται και αν τρέχει νερό.", sparse: n => n === 0 ? "Δεν έχουμε κανένα σημείο εδώ. Ξέρεις κάποιο;" : `Μόνο ${n} ${n === 1 ? "σημείο" : "σημεία"} εδώ. Ξέρεις κάποιο που λείπει;`, sparseCta: "Πρόσθεσε", updated: "Δεδομένα από", privacy: "Η τοποθεσία σου μένει στη συσκευή σου και δεν αποθηκεύεται.", athens: "Αθήνα", thess: "Θεσσαλονίκη",
     fountain: "Βρύση", tap: "Κάνουλα", spring: "Πηγή", unnamed: "Χωρίς όνομα",
     nearest: "Πιο κοντινές", nearestNone: "Πάτα «Κοντά μου» για να δεις τις πιο κοντινές βρύσες.",
     locating: "Εντοπισμός…", locFail: "Δεν βρέθηκε η τοποθεσία σου. Έλεγξε τα δικαιώματα του browser.",
@@ -115,7 +128,7 @@ const T = {
     aboutMissing: "Βρήκες μια βρύση που λείπει ή δεν δουλεύει; Πάτα «Πρόβλημα / λείπει κάτι;» σε οποιοδήποτε σημείο, ή δες τη σελίδα OpenStreetMap για να την προσθέσεις.",
   },
   en: {
-    title: "Drinking water", near: "Near me", ok: "OK", missing: "Missing a fountain?", athens: "Athens", thess: "Thessaloniki",
+    title: "Drinking water", near: "Near me", ok: "OK", missing: "Missing a fountain?", directions: "Directions", cancel: "Cancel", missingGo: "Open note", missingTitle: "Missing a fountain?", missingBody: "This opens an OpenStreetMap note at the spot you see on the map now. First move the map onto the spot. In the note, say what it is (fountain, tap, spring), exactly where it is, and whether water flows.", sparse: n => `Only ${n} ${n === 1 ? "point" : "points"} here. Know one that's missing?`, sparseCta: "Add", updated: "Data from", privacy: "Your location stays on your device and isn't stored.", athens: "Athens", thess: "Thessaloniki",
     fountain: "Fountain", tap: "Tap", spring: "Spring", unnamed: "Unnamed",
     nearest: "Nearest", nearestNone: "Tap “Near me” to see the closest fountains.",
     locating: "Locating…", locFail: "Couldn't get your location. Check your browser permissions.",
@@ -145,7 +158,7 @@ function setSheet(open) { sheet.classList.toggle("open", open); $("chev").textCo
 const map = new maplibregl.Map({
   container: "map",
   style: "https://tiles.openfreemap.org/styles/liberty",
-  center: [23.73, 37.98], zoom: 11, attributionControl: { compact: true },
+  center: [23.73, 37.98], zoom: 11, hash: true, attributionControl: { compact: true },
 });
 map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
 new ResizeObserver(() => map.resize()).observe($("map"));
@@ -222,6 +235,9 @@ function popupNode(f) {
   links.append(mk(`https://www.openstreetmap.org/${kind}/${p.osm.slice(1)}`, t("viewOsm")),
                mk(`https://www.openstreetmap.org/note/new#map=19/${lat}/${lon}`, t("report")));
   div.append(links);
+  const dir = document.createElement("a"); dir.className = "dir"; dir.target = "_blank"; dir.rel = "noopener";
+  dir.href = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&travelmode=walking`;
+  dir.textContent = "→ " + t("directions"); div.append(dir);
   return div;
 }
 
@@ -246,15 +262,29 @@ function locate() {
 
 function updateMissingLink() {
   const c = map.getCenter(), z = Math.max(17, Math.round(map.getZoom()));
-  $("missing").href = `https://www.openstreetmap.org/note/new#map=${z}/${c.lat.toFixed(5)}/${c.lng.toFixed(5)}`;
+  $("missingGo").href = `https://www.openstreetmap.org/note/new#map=${z}/${c.lat.toFixed(5)}/${c.lng.toFixed(5)}`;
 }
-map.on("moveend", updateMissingLink);
+function updateNudge() {
+  if (!data || map.getZoom() < 12) { $("nudge").classList.remove("show"); return; }
+  const b = map.getBounds(), w = b.getWest(), e = b.getEast(), s = b.getSouth(), n = b.getNorth();
+  const inView = data.features.filter(f => { const [x, y] = f.geometry.coordinates; return visible(f) && x >= w && x <= e && y >= s && y <= n; }).length;
+  $("nudgeText").textContent = t("sparse")(inView);
+  $("nudge").classList.toggle("show", inView < 8);
+}
+map.on("moveend", () => { updateMissingLink(); updateNudge(); });
 updateMissingLink();
+const openMissing = () => { updateMissingLink(); $("mdlg").showModal(); };
+$("missing").onclick = openMissing;
+$("nudgeBtn").onclick = openMissing;
+$("mCancel").onclick = () => $("mdlg").close();
+$("missingGo").addEventListener("click", () => $("mdlg").close());
 
 function applyLang() {
   document.documentElement.lang = lang;
   document.querySelectorAll("[data-i]").forEach(e => e.textContent = t(e.dataset.i));
   $("lang").textContent = lang === "el" ? "EN" : "ΕΛ";
+  if (data) $("updated").textContent = `${t("updated")} OpenStreetMap: ${data.generated || "?"}`;
+  updateNudge();
   renderChips(); if (data) { renderList(); $("count").textContent = t("points")(data.features.filter(visible).length); }
 }
 
@@ -286,7 +316,7 @@ map.on("load", async () => {
     map.on("mouseenter", l, () => map.getCanvas().style.cursor = "pointer");
     map.on("mouseleave", l, () => map.getCanvas().style.cursor = "");
   }
-  applyFilter();
+  applyFilter(); $("updated").textContent = `${t("updated")} OpenStreetMap: ${data.generated || "?"}`; updateNudge();
 });
 applyLang();
 </script>
