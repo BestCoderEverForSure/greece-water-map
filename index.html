@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Πόσιμο νερό · Drinking water Greece</title>
-<meta name="description" content="Χάρτης με βρύσες και πηγές πόσιμου νερού στην Ελλάδα. Map of drinking fountains, taps and springs in Greece.">
+<title>Νεράκι · Πόσιμο νερό στην Ελλάδα · Drinking water in Greece</title>
+<meta name="description" content="Νεράκι: χάρτης με βρύσες και πηγές πόσιμου νερού στην Ελλάδα. Neraki: a free map of drinking fountains, taps and springs in Greece.">
 <meta name="theme-color" content="#0e6ba8">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://bestcodereverforsure.github.io/greece-water-map/">
-<meta property="og:title" content="Πόσιμο νερό στην Ελλάδα · Drinking water in Greece">
-<meta property="og:description" content="Χάρτης με βρύσες, κάνουλες και πηγές. A free map of drinking fountains, taps and springs in Greece.">
+<meta property="og:title" content="Νεράκι · Πόσιμο νερό στην Ελλάδα · Drinking water in Greece">
+<meta property="og:description" content="Χάρτης με βρύσες, κάνουλες και πηγές. Neraki: a free map of drinking fountains, taps and springs in Greece.">
 <meta name="twitter:card" content="summary">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Cpath d=%27M32 4C21 20 14 29 14 40a18 18 0 0 0 36 0C50 29 43 20 32 4z%27 fill=%27%231478d4%27/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 30%27%3E%3Cpath d=%27M12 2C8 9 3 13.5 3 19A9 9 0 0 0 21 19C21 13.5 16 9 12 2Z%27 fill=%27none%27 stroke=%27%230e6ba8%27 stroke-width=%272.4%27/%3E%3Ccircle cx=%2712%27 cy=%2719%27 r=%273%27 fill=%27%230e6ba8%27/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <style>
   :root {
@@ -130,7 +130,7 @@
 
 <div class="top">
   <div class="bar">
-    <div class="title"><span class="logo"><svg class="drop" viewBox="0 0 24 30" width="17" height="21" aria-hidden="true"><path d="M12 2C8 9 3 13.5 3 19A9 9 0 0 0 21 19C21 13.5 16 9 12 2Z" fill="#0e6ba8"/></svg></span><span data-i="title"></span><small id="count">…</small></div>
+    <div class="title"><span class="logo"><svg class="drop" viewBox="0 0 24 30" width="17" height="21" aria-hidden="true"><path d="M12 2C8 9 3 13.5 3 19A9 9 0 0 0 21 19C21 13.5 16 9 12 2Z" fill="none" stroke="#0e6ba8" stroke-width="2.6"/><circle cx="12" cy="19" r="3.2" fill="#0e6ba8"/></svg></span><span data-i="title"></span><small id="count">…</small></div>
     <button class="icon" id="lang">EN</button>
     <button class="icon" id="menuBtn" aria-label="Menu" aria-expanded="false" aria-controls="menu"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
   </div>
@@ -219,7 +219,7 @@ const startedWithHash = location.hash.length > 1;
 
 const T = {
   el: {
-    title: "Πόσιμο νερό", ok: "ΟΚ", cancel: "Άκυρο",
+    title: "Νεράκι", ok: "ΟΚ", cancel: "Άκυρο",
     gDrink: "Πόσιμο νερό", gOther: "Πηγές & κάνουλες",
     fountain: "Βρύση", tap: "Κάνουλα", spring: "Πηγή", point: "Σημείο νερού", bottle: "Γέμισμα μπουκαλιού", free: "Δωρεάν",
     menuPlaces: "Μέρη", menuMap: "Τύπος χάρτη", menuShare: "Κοινοποίηση", copied: "Ο σύνδεσμος αντιγράφηκε", theme: "Θέμα", theme_auto: "Αυτόματο", theme_light: "Φωτεινό", theme_dark: "Σκούρο", mapStandard: "Κανονικός", mapTerrain: "Ανάγλυφο", mapTerrainNote: "Σκιασμένο ανάγλυφο, καλό για βουνά και πεζοπορία.", mapSat: "Δορυφόρος", mapSatNote: "Sentinel-2, 2016, περίπου 10 μ. ανάλυση. Καλός για βουνά και βλάστηση, όχι για λεπτομέρειες δρόμων.", route: "Διαδρομή GPX", menuAbout: "Σχετικά", menuSupport: "Στήριξη",
@@ -248,7 +248,7 @@ const T = {
     updated: "Δεδομένα από", donate: "Σου αρέσει ο χάρτης; Κέρασε έναν καφέ", statsNote: "Μετράμε τις επισκέψεις χωρίς cookies και χωρίς προσωπικά στοιχεία.", feedback: "Σχόλια ή προβλήματα στη σελίδα",
   },
   en: {
-    title: "Drinking water", ok: "OK", cancel: "Cancel",
+    title: "Νεράκι", ok: "OK", cancel: "Cancel",
     gDrink: "Drinking water", gOther: "Springs & taps",
     fountain: "Fountain", tap: "Tap", spring: "Spring", point: "Water point", bottle: "Bottle refill", free: "Free",
     menuPlaces: "Places", menuMap: "Map type", menuShare: "Share", copied: "Link copied", theme: "Theme", theme_auto: "Auto", theme_light: "Light", theme_dark: "Dark", mapStandard: "Standard", mapTerrain: "Terrain", mapTerrainNote: "Shaded relief, good for mountains and hiking.", mapSat: "Satellite", mapSatNote: "Sentinel-2, 2016, about 10 m resolution. Good for mountains and vegetation, not for street details.", route: "Route (GPX)", menuAbout: "About", menuSupport: "Support",
