@@ -641,7 +641,7 @@ function applyLang() {
   $("mTheme").textContent = `${t("theme")}: ${t("theme_" + theme)}`;
   $("lang").textContent = lang === "el" ? "EN" : "ΕΛ";
   if (data) $("updated").textContent = `${t("updated")} OpenStreetMap: ${data.generated || "?"}`;
-  try { if (map.getLayer("place_town")) setLabelLanguage(); } catch (e) {}
+  try { if (map.getStyle()) setLabelLanguage(); } catch (e) {}   // no-op until the base style has loaded
   renderChips(); renderPlaces(); updateNudge();
   if (data) { renderList(); $("count").textContent = t("points")(data.features.filter(visible).length); }
 }
