@@ -79,6 +79,8 @@
   .list li button:hover, .list li button:focus-visible { background: color-mix(in srgb, var(--accent) 10%, transparent); }
   .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; background: var(--drink); }
   .dot.ring { background: transparent; border: 2.5px solid var(--other); }
+  .brg { display: inline-block; width: 14px; text-align: center; color: var(--muted); font-weight: 700; }
+  .locbtn { margin: 0 16px 8px; border: 1.5px solid var(--accent); color: var(--accent); background: none; border-radius: 999px; padding: 6px 14px; font-weight: 600; }
   .dist { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; }
   .empty { padding: 4px 16px 14px; color: var(--muted); }
   .rctl { padding: 0 16px 8px; font-size: 13px; }
@@ -237,7 +239,7 @@ const T = {
     missing: "Λείπει βρύση;", missingTitle: "Λείπει μια βρύση;", missingGo: "Άνοιγμα σημείωσης",
     missingBody: "Θα ανοίξει μια σημείωση στο OpenStreetMap (ο ανοιχτός χάρτης από τον οποίο παίρνουμε τα δεδομένα) στο σημείο που βλέπεις τώρα στον χάρτη. Πρώτα μετακίνησε τον χάρτη πάνω στο σημείο. Στη σημείωση γράψε τι είναι (βρύση, κάνουλα, πηγή), πού ακριβώς βρίσκεται και αν τρέχει νερό.",
     sparse: n => n === 0 ? "Δεν έχουμε κανένα σημείο εδώ. Ξέρεις κάποιο;" : `Μόνο ${n} ${n === 1 ? "σημείο" : "σημεία"} εδώ. Ξέρεις κάποιο που λείπει;`, sparseCta: "Πρόσθεσε",
-    nearest: "Πιο κοντινές", nearestNone: "Πάτα το κουμπί τοποθεσίας στον χάρτη για να δεις τις πιο κοντινές βρύσες.",
+    nearest: "Πιο κοντινές σε σένα", nearestMap: "Πιο κοντινές στο κέντρο του χάρτη", nearestNone: "Δεν βρέθηκε τίποτα εδώ. Μετακίνησε τον χάρτη.", useLocation: "Χρήση της τοποθεσίας μου", min: "λεπ.",
     noResults: "Δεν βρέθηκε τίποτα κοντά σου με αυτά τα φίλτρα.",
     locFail: "Δεν βρέθηκε η τοποθεσία σου. Έλεγξε τα δικαιώματα του browser.",
     outside: "Φαίνεται ότι είσαι εκτός Ελλάδας. Δείχνουμε την Αθήνα.",
@@ -266,7 +268,7 @@ const T = {
     missing: "Missing a fountain?", missingTitle: "Missing a fountain?", missingGo: "Open note",
     missingBody: "This opens a note on OpenStreetMap (the open map our data comes from) at the spot you see on the map now. First move the map onto the spot. In the note, say what it is (fountain, tap, spring), exactly where it is, and whether water flows.",
     sparse: n => n === 0 ? "No points here yet. Know one?" : `Only ${n} ${n === 1 ? "point" : "points"} here. Know one that's missing?`, sparseCta: "Add",
-    nearest: "Nearest", nearestNone: "Tap the location button on the map to see the closest fountains.",
+    nearest: "Nearest to you", nearestMap: "Nearest to the map centre", nearestNone: "Nothing found here. Move the map.", useLocation: "Use my location", min: "min",
     noResults: "Nothing found near you with these filters.",
     locFail: "Couldn't get your location. Check your browser permissions.",
     outside: "You seem to be outside Greece. Showing Athens.",
@@ -287,6 +289,8 @@ const T = {
 };
 let lang = (navigator.language || "el").toLowerCase().startsWith("el") ? "el" : "en";
 try { lang = localStorage.getItem("lang") || lang; } catch (e) {}
+{ const q = new URLSearchParams(location.search).get("lang");   // links from the English area pages open the app in English
+  if (q === "el" || q === "en") { lang = q; try { localStorage.setItem("lang", q); } catch (e) {} } }
 const t = k => T[lang][k];
 
 // ---- places (centre points are approximate)
@@ -357,18 +361,23 @@ map.addControl(geolocate, "bottom-right");
 map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
 new ResizeObserver(() => map.resize()).observe($("map"));
 
+let wantSheet = false;
+geolocate.on("trackuserlocationstart", () => { wantSheet = true; });
 geolocate.on("geolocate", e => {
   const p = [e.coords.longitude, e.coords.latitude];
   if (!inGreece(p)) {
     userPos = null;
-    if (firstFix) { toast(t("outside")); map.flyTo({ center: [23.7275, 37.9838], zoom: 12 }); }
-    firstFix = false; renderList(); return;
+    if (firstFix || wantSheet) { toast(t("outside")); map.flyTo({ center: [23.7275, 37.9838], zoom: 12 }); }
+    firstFix = false;
+    if (wantSheet) { renderList(); setSheet(true); wantSheet = false; }   // show the list for the map centre instead
+    else renderList();
+    return;
   }
   userPos = p; renderList();
-  if (firstFix) setSheet(true);
-  firstFix = false;
+  if (firstFix || wantSheet) setSheet(true);
+  firstFix = false; wantSheet = false;
 });
-geolocate.on("error", () => toast(t("locFail")));
+geolocate.on("error", () => { toast(t("locFail")); userPos = null; renderList(); });
 
 function haversine(a, b) {
   const R = 6371000, r = Math.PI / 180;
@@ -406,24 +415,44 @@ function renderChips() {
 
 function dotFor(p) { const d = document.createElement("span"); d.innerHTML = dropSVG(p.grade, 12); return d; }
 
+function bearing(a, b) {
+  const r = Math.PI / 180, dLon = (b[0] - a[0]) * r, y = Math.sin(dLon) * Math.cos(b[1] * r);
+  const x = Math.cos(a[1] * r) * Math.sin(b[1] * r) - Math.sin(a[1] * r) * Math.cos(b[1] * r) * Math.cos(dLon);
+  return (Math.atan2(y, x) / r + 360) % 360;
+}
+const walkMin = d => Math.max(1, Math.round(d / 80));   // about 5 km/h
+
+function nearestRef() { const c = map.getCenter(); return userPos || [c.lng, c.lat]; }
+
 function renderList() {
   const ul = $("list"); ul.textContent = "";
   $("rctl").hidden = !route;
   if (route) return renderRouteList(ul);
-  $("sheetTitle").textContent = t("nearest");
+  const ref = nearestRef();
+  $("sheetTitle").textContent = t(userPos ? "nearest" : "nearestMap");
+  if (!userPos) {
+    const b = document.createElement("button"); b.className = "locbtn"; b.textContent = t("useLocation");
+    b.onclick = () => geolocate.trigger(); ul.append(b);
+  }
   const say = txt => { const p = document.createElement("p"); p.className = "empty"; p.textContent = txt; ul.append(p); };
-  if (!data || !userPos) return say(t("nearestNone"));
+  if (!data) return;
   const near = data.features.filter(visible)
-    .map(f => ({ f, d: haversine(userPos, f.geometry.coordinates) })).sort((a, b) => a.d - b.d).slice(0, 12);
-  if (!near.length) return say(t("noResults"));
+    .map(f => ({ f, d: haversine(ref, f.geometry.coordinates) })).sort((a, b) => a.d - b.d).slice(0, 12);
+  if (!near.length) return say(t("nearestNone"));
+  $("sheetTitle").textContent += ` · ${fmtDist(near[0].d)}`;      // visible even when the panel is collapsed
   for (const { f, d } of near) {
     const li = document.createElement("li"), b = document.createElement("button");
     const nm = document.createElement("span"); nm.textContent = labelOf(f.properties);
-    const ds = document.createElement("span"); ds.className = "dist"; ds.textContent = fmtDist(d);
-    b.append(dotFor(f.properties), nm, ds); b.onclick = () => { focusOn(f); setSheet(false); };
+    const arrow = document.createElement("span"); arrow.className = "brg"; arrow.textContent = "↑";
+    arrow.style.transform = `rotate(${Math.round(bearing(ref, f.geometry.coordinates))}deg)`; arrow.setAttribute("aria-hidden", "true");
+    const ds = document.createElement("span"); ds.className = "dist";
+    ds.textContent = d < 5000 ? `${fmtDist(d)} · ${walkMin(d)} ${t("min")}` : fmtDist(d);
+    b.append(dotFor(f.properties), nm, ds, arrow); b.onclick = () => { focusOn(f); setSheet(false); };
     li.append(b); ul.append(li);
   }
 }
+let nearestTimer;
+function scheduleNearest() { if (userPos || route) return; clearTimeout(nearestTimer); nearestTimer = setTimeout(renderList, 200); }
 
 function popupNode(f) {
   const p = f.properties, [lon, lat] = f.geometry.coordinates, div = document.createElement("div");
@@ -476,7 +505,7 @@ function updateNudge() {
   $("nudgeText").textContent = t("sparse")(inView);
   $("nudge").classList.toggle("show", inView < 8);
 }
-map.on("moveend", () => { updateMissingLink(); updateNudge(); });
+map.on("moveend", () => { updateMissingLink(); updateNudge(); scheduleNearest(); });
 updateMissingLink();
 const openMissing = () => { updateMissingLink(); $("mdlg").showModal(); };
 $("missing").onclick = openMissing;
@@ -662,6 +691,7 @@ function applyLang() {
   document.documentElement.lang = lang;
   document.querySelectorAll("[data-i]").forEach(e => e.textContent = t(e.dataset.i));
   $("pq").placeholder = t("placesSearch");
+  $("mAreas").href = lang === "el" ? "vryses/" : "en/areas/";
   $("mTheme").textContent = `${t("theme")}: ${t("theme_" + theme)}`;
   $("lang").textContent = lang === "el" ? "EN" : "ΕΛ";
   if (data) $("updated").textContent = `${t("updated")} OpenStreetMap: ${data.generated || "?"}`;

@@ -1,7 +1,9 @@
-"""Generate static, search-engine-friendly pages: one per Greek regional unit and municipality.
+"""Generate static, search-engine-friendly pages in Greek and English: one per Greek regional unit and municipality.
 
 Usage: python build_pages.py water.geojson areas.geojson OUT_DIR [BASE_URL]
-Writes OUT_DIR/vryses/<slug>/index.html, OUT_DIR/vryses/index.html, OUT_DIR/sitemap.xml, OUT_DIR/robots.txt.
+Greek:   OUT_DIR/vryses/<slug>/index.html      and OUT_DIR/vryses/index.html
+English: OUT_DIR/en/areas/<slug>/index.html    and OUT_DIR/en/areas/index.html
+Also OUT_DIR/sitemap.xml and OUT_DIR/robots.txt.
 Data © OpenStreetMap contributors (ODbL).
 """
 import html
@@ -20,6 +22,28 @@ MAX_LISTED = 120        # points listed on a page
 GREEK = {"α": "a", "β": "v", "γ": "g", "δ": "d", "ε": "e", "ζ": "z", "η": "i", "θ": "th", "ι": "i", "κ": "k", "λ": "l",
          "μ": "m", "ν": "n", "ξ": "x", "ο": "o", "π": "p", "ρ": "r", "σ": "s", "ς": "s", "τ": "t", "υ": "y", "φ": "f",
          "χ": "ch", "ψ": "ps", "ω": "o"}
+DIRS = {"el": "vryses", "en": "en/areas"}
+
+TXT = {
+    "el": {
+        "lang": "el", "switch": "English", "areas": "Περιοχές", "brand": "Νεράκι",
+        "kinds": {"fountain": "Βρύση", "tap": "Κάνουλα", "spring": "Πηγή", "point": "Σημείο νερού"},
+        "free": "Δωρεάν", "bottle": "Γέμισμα μπουκαλιού", "fallback_point": "Σημείο",
+        "footer": "Τα δεδομένα είναι από το OpenStreetMap, έναν ανοιχτό χάρτη που φτιάχνουν εθελοντές (© OpenStreetMap contributors, ODbL). Το νερό δεν είναι εγγυημένα ασφαλές: οι πληροφορίες προέρχονται από εθελοντές και δεν έχουν ελεγχθεί από εμάς. Αν δεν είσαι σίγουρος, ρώτα ή πάρε δικό σου νερό.",
+        "open_map": "Άνοιγμα στον χάρτη", "open_map_full": "Άνοιγμα του χάρτη",
+        "s_total": "σημεία συνολικά", "s_drink": "πόσιμο νερό", "s_other": "πηγές και κάνουλες (μη επιβεβαιωμένες)",
+        "h_munis": "Δήμοι", "h_neigh": "Γειτονικοί δήμοι στην ίδια ενότητα", "h_missing": "Λείπει κάποια βρύση;",
+    },
+    "en": {
+        "lang": "en", "switch": "Ελληνικά", "areas": "Areas", "brand": "Νεράκι",
+        "kinds": {"fountain": "Fountain", "tap": "Tap", "spring": "Spring", "point": "Water point"},
+        "free": "Free", "bottle": "Bottle refill", "fallback_point": "Point",
+        "footer": "Data is from OpenStreetMap, an open map made by volunteers (© OpenStreetMap contributors, ODbL). Water isn't guaranteed safe: the information comes from volunteers and isn't checked by us. If you're unsure, ask locally or carry your own water.",
+        "open_map": "Open on the map", "open_map_full": "Open the map",
+        "s_total": "points in total", "s_drink": "drinking water", "s_other": "springs and taps (unconfirmed)",
+        "h_munis": "Municipalities", "h_neigh": "Neighbouring municipalities in the same unit", "h_missing": "Missing a fountain?",
+    },
+}
 
 
 def translit(s):
@@ -30,40 +54,43 @@ def translit(s):
 
 
 def slugify(s):
-    s = translit(s)
-    s = re.sub(r"[^a-z0-9]+", "-", s).strip("-")
+    s = re.sub(r"[^a-z0-9]+", "-", translit(s)).strip("-")
     return s or "area"
 
 
-def clean_name(pr):
-    """Greek display name and a Latin slug source."""
+def names(pr):
+    """(Greek display name, English display name, slug)."""
     el = pr["name_el"] or pr["name"]
     en = pr["name_en"]
-    base = re.sub(r"\b(Municipality of|Regional Unit|Regional unit|Municipality)\b", "", en).strip() if en else ""
-    if not base:
-        base = re.sub(r"^(Δήμος|Περιφερειακή Ενότητα)\s+", "", el)
-    return el, slugify(base)
+    bare_el = re.sub(r"^(Δήμος|Περιφερειακή Ενότητα|Μητροπολιτική Ενότητα)\s+", "", el)
+    base_en = re.sub(r"\b(Municipality of|Regional Unit|Regional unit|Metropolitan Unit|Municipality)\b", "", en).strip() if en else ""
+    slug = slugify(base_en or bare_el)
+    if not en:
+        words = translit(bare_el).replace("-", " ").title()
+        en = f"{words} Regional Unit" if pr["level"] == "unit" else f"Municipality of {words}"
+    return el, en, slug
 
 
 def esc(x):
     return html.escape(str(x), quote=True)
 
 
-KIND_EL = {"fountain": "Βρύση", "tap": "Κάνουλα", "spring": "Πηγή", "point": "Σημείο νερού"}
-
-
-def page(title, desc, canonical, body, base, crumbs):
+def page(lang, title, desc, canonical, body, base, crumbs, alts):
+    x = TXT[lang]
+    other = "en" if lang == "el" else "el"
+    home = base if lang == "el" else f"{base}?lang=en"
     ld = {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
         {"@type": "ListItem", "position": i + 1, "name": n, "item": u} for i, (n, u) in enumerate(crumbs)]}
+    alt_links = "".join(f'<link rel="alternate" hreflang="{k}" href="{esc(v)}">\n' for k, v in alts.items())
     return f"""<!doctype html>
-<html lang="el">
+<html lang="{x['lang']}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{esc(title)}</title>
 <meta name="description" content="{esc(desc)}">
 <link rel="canonical" href="{esc(canonical)}">
-<meta property="og:type" content="website">
+{alt_links}<meta property="og:type" content="website">
 <meta property="og:title" content="{esc(title)}">
 <meta property="og:description" content="{esc(desc)}">
 <meta property="og:url" content="{esc(canonical)}">
@@ -75,8 +102,9 @@ def page(title, desc, canonical, body, base, crumbs):
 @media(prefers-color-scheme:dark){{:root{{--bg:#0f1a24;--fg:#e8eef3;--muted:#9db0c1;--line:#263644;--card:#16232f;--accent:#3d9bd8}}}}
 *{{box-sizing:border-box}}body{{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}}
 main{{max-width:760px;margin:0 auto;padding:16px}}a{{color:var(--accent)}}
-header.top{{display:flex;align-items:center;gap:10px;padding:12px 16px;max-width:760px;margin:0 auto}}
-header.top a{{color:var(--fg);text-decoration:none;font-weight:650;display:flex;align-items:center;gap:8px}}
+header.top{{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;max-width:760px;margin:0 auto}}
+header.top a.brand{{color:var(--fg);text-decoration:none;font-weight:650;display:flex;align-items:center;gap:8px}}
+header.top a.sw{{font-size:14px;text-decoration:none;border:1.5px solid var(--line);border-radius:999px;padding:4px 12px;color:var(--fg)}}
 nav.crumbs{{font-size:14px;color:var(--muted);margin:4px 0 12px}}nav.crumbs a{{color:var(--muted)}}
 h1{{font-size:26px;line-height:1.2;margin:.2em 0 .4em}}h2{{font-size:19px;margin:1.6em 0 .5em}}
 .lead{{color:var(--muted);margin:0 0 14px}}
@@ -91,11 +119,11 @@ ul.list li a.n{{font-weight:600;text-decoration:none}}.badge{{font-size:12px;fon
 </style>
 </head>
 <body>
-<header class="top"><a href="{esc(base)}"><svg viewBox="0 0 24 30" width="17" height="21" aria-hidden="true"><path d="M12 2C8 9 3 13.5 3 19A9 9 0 0 0 21 19C21 13.5 16 9 12 2Z" fill="#0d5eaf"/><circle cx="12" cy="19" r="6.3" fill="#ffffff"/><circle cx="12" cy="19" r="4.5" fill="#5aa9e6"/><circle cx="12" cy="19" r="2.4" fill="#0b2d5b"/></svg>Νεράκι</a></header>
+<header class="top"><a class="brand" href="{esc(home)}"><svg viewBox="0 0 24 30" width="17" height="21" aria-hidden="true"><path d="M12 2C8 9 3 13.5 3 19A9 9 0 0 0 21 19C21 13.5 16 9 12 2Z" fill="#0d5eaf"/><circle cx="12" cy="19" r="6.3" fill="#ffffff"/><circle cx="12" cy="19" r="4.5" fill="#5aa9e6"/><circle cx="12" cy="19" r="2.4" fill="#0b2d5b"/></svg>{x['brand']}</a><a class="sw" href="{esc(alts[other])}" hreflang="{other}">{x['switch']}</a></header>
 <main>
 {body}
 </main>
-<footer>Τα δεδομένα είναι από το OpenStreetMap, έναν ανοιχτό χάρτη που φτιάχνουν εθελοντές (© OpenStreetMap contributors, ODbL). Το νερό δεν είναι εγγυημένα ασφαλές: οι πληροφορίες προέρχονται από εθελοντές και δεν έχουν ελεγχθεί από εμάς. Αν δεν είσαι σίγουρος, ρώτα ή πάρε δικό σου νερό.</footer>
+<footer>{esc(x['footer'])}</footer>
 </body>
 </html>
 """
@@ -103,8 +131,8 @@ ul.list li a.n{{font-weight:600;text-decoration:none}}.badge{{font-size:12px;fon
 
 def main(water_path, areas_path, out_dir, base="https://bestcodereverforsure.github.io/greece-water-map/"):
     base = base if base.endswith("/") else base + "/"
-    feats = json.load(open(water_path))["features"]
-    generated = json.load(open(water_path)).get("generated", "")
+    water = json.load(open(water_path))
+    feats, generated = water["features"], water.get("generated", "")
     areas = json.load(open(areas_path))["features"]
     polys = [(shape(a["geometry"]), a["properties"]) for a in areas]
     units = [(g, p) for g, p in polys if p["level"] == "unit"]
@@ -114,11 +142,10 @@ def main(water_path, areas_path, out_dir, base="https://bestcodereverforsure.git
     def locate(tree, items, pt):
         for i in tree.query(pt, predicate="within"):
             return items[int(i)][1]["rel"]
-        i = tree.nearest(pt)          # points on the coast can miss a simplified polygon: accept close ones
+        i = tree.nearest(pt)          # coastal points can miss a simplified polygon: accept close ones
         return items[int(i)][1]["rel"] if items[int(i)][0].distance(pt) < 0.004 else None
 
-    by_unit, by_muni = defaultdict(list), defaultdict(list)
-    muni_unit = {}
+    by_unit, by_muni, muni_unit = defaultdict(list), defaultdict(list), {}
     for f in feats:
         lon, lat = f["geometry"]["coordinates"]
         pt = Point(lon, lat)
@@ -126,122 +153,149 @@ def main(water_path, areas_path, out_dir, base="https://bestcodereverforsure.git
         if u: by_unit[u].append(f)
         if m: by_muni[m].append(f)
     for g, p in munis:
-        rp = g.representative_point()
-        for i in ut.query(rp, predicate="within"):
+        for i in ut.query(g.representative_point(), predicate="within"):
             muni_unit[p["rel"]] = units[int(i)][1]["rel"]
             break
 
-    # slugs (unique)
-    info, used = {}, set()
-    for g, p in munis + units:            # municipalities first: they keep the plain name when a unit shares it
-        el, sl = clean_name(p)
+    info, used = {}, set()                 # unique slugs; municipalities keep the plain name when a unit shares it
+    for g, p in munis + units:
+        el, en, sl = names(p)
         if sl in used and p["level"] == "unit":
             sl = f"{sl}-regional-unit"
         if sl in used:
             sl = f"{sl}-{p['rel']}"
         used.add(sl)
-        info[p["rel"]] = {"el": el, "slug": sl, "level": p["level"], "geom": g}
+        info[p["rel"]] = {"el": el, "en": en, "slug": sl, "level": p["level"]}
+
+    def area_url(rel, lang):
+        return f"{base}{DIRS[lang]}/{info[rel]['slug']}/"
+
+    def index_url(lang):
+        return f"{base}{DIRS[lang]}/"
+
+    def map_link(lang, lat, lon, z):
+        return f"{base}{'' if lang == 'el' else '?lang=en'}#{z}/{lat:.5f}/{lon:.5f}"
 
     def counts(fs):
-        drink = sum(1 for f in fs if f["properties"].get("grade") == "drink" or f["properties"]["kind"] == "fountain"
-                    or f["properties"].get("drinking_water") == "yes")
+        drink = sum(1 for f in fs if f["properties"]["kind"] == "fountain" or f["properties"].get("drinking_water") == "yes")
         return len(fs), drink
 
-    def area_url(rel):
-        return f"{base}vryses/{info[rel]['slug']}/"
-
-    def map_link(lat, lon, z):
-        return f"{base}#{z}/{lat:.5f}/{lon:.5f}"
-
-    def point_li(f):
-        p, (lon, lat) = f["properties"], f["geometry"]["coordinates"]
-        name = p.get("name:el") or p.get("name") or KIND_EL.get(p["kind"], "Σημείο")
-        label = name if (p.get("name:el") or p.get("name")) else name
-        bits = [f'<a class="n" href="{esc(map_link(lat, lon, 18))}">{esc(label)}</a>']
-        bits.append(f'<span class="muted">{esc(KIND_EL.get(p["kind"], ""))}</span>')
-        if p.get("fee") == "no": bits.append('<span class="badge">Δωρεάν</span>')
-        if p.get("bottle") == "yes": bits.append('<span class="badge">Γέμισμα μπουκαλιού</span>')
+    def point_li(lang, f):
+        x = TXT[lang]; p, (lon, lat) = f["properties"], f["geometry"]["coordinates"]
+        nm = p.get("name:el") if lang == "el" else (p.get("name:en") or p.get("name"))
+        nm = nm or p.get("name") or x["kinds"].get(p["kind"], x["fallback_point"])
+        bits = [f'<a class="n" href="{esc(map_link(lang, lat, lon, 18))}">{esc(nm)}</a>',
+                f'<span class="muted">{esc(x["kinds"].get(p["kind"], ""))}</span>']
+        if p.get("fee") == "no": bits.append(f'<span class="badge">{esc(x["free"])}</span>')
+        if p.get("bottle") == "yes": bits.append(f'<span class="badge">{esc(x["bottle"])}</span>')
         return "<li>" + " ".join(bits) + "</li>"
 
     def order(fs):
         return sorted(fs, key=lambda f: (0 if (f["properties"].get("name:el") or f["properties"].get("name")) else 1,
                                          0 if f["properties"]["kind"] == "fountain" else 1))
 
-    urls, made = [base, f"{base}vryses/"], 0
-    root = os.path.join(out_dir, "vryses")
-    os.makedirs(root, exist_ok=True)
+    files, urls = {}, []                   # relative path -> content ; URLs for the sitemap
 
-    def write(rel_path, content):
-        d = os.path.join(root, rel_path) if rel_path else root
-        os.makedirs(d, exist_ok=True)
-        open(os.path.join(d, "index.html"), "w").write(content)
-
-    def area_page(rel, fs):
-        a = info[rel]; total, drink = counts(fs)
+    def area_page(lang, rel, fs):
+        x, a = TXT[lang], info[rel]
+        name = a[lang]
+        total, drink = counts(fs)
         lats = [f["geometry"]["coordinates"][1] for f in fs]; lons = [f["geometry"]["coordinates"][0] for f in fs]
         clat, clon = sum(lats) / len(lats), sum(lons) / len(lons)
         z = 12 if a["level"] == "unit" else 14
-        kind_name = "στην " + a["el"] if a["level"] == "unit" else "στον " + a["el"]
-        title = f"Πόσιμο νερό και βρύσες: {a['el']} | Νεράκι"
-        desc = f"{total} γνωστά σημεία με πόσιμο νερό (βρύσες, κάνουλες, πηγές) {kind_name}. Λίστα και χάρτης, με δεδομένα από το OpenStreetMap."
-        crumbs = [("Νεράκι", base), ("Περιοχές", f"{base}vryses/")]
-        crumb_html = f'<a href="{esc(base)}">Νεράκι</a> › <a href="{esc(base)}vryses/">Περιοχές</a>'
+        if lang == "el":
+            where = "στην " + name if a["level"] == "unit" else "στον " + name.replace("Δήμος ", "Δήμο ", 1)   # accusative after the preposition
+            title = f"Πόσιμο νερό και βρύσες: {name} | Νεράκι"
+            desc = f"{total} γνωστά σημεία με πόσιμο νερό (βρύσες, κάνουλες, πηγές) {where}. Λίστα και χάρτης, με δεδομένα από το OpenStreetMap."
+            h1 = f"Πόσιμο νερό: {name}"
+            lead = f"{total} γνωστά σημεία {where}, από τα οποία {drink} δηλώνονται ως πόσιμο νερό στα δεδομένα του χάρτη."
+            h_points = f"Σημεία στον χάρτη ({min(total, MAX_LISTED)}{' από ' + str(total) if total > MAX_LISTED else ''})"
+            miss = (f'Ξέρεις μια βρύση ή πηγή που δεν φαίνεται εδώ, ή μία που δεν δουλεύει; <a href="{esc(map_link(lang, clat, clon, 16))}">Άνοιξε τον χάρτη</a> '
+                    f'και πάτα «Λείπει βρύση;» για να το αναφέρεις. Τα δεδομένα ενημερώνονται κάθε εβδομάδα'
+                    f'{(" (τελευταία ενημέρωση: " + esc(generated) + ")") if generated else ""}.')
+        else:
+            title = f"Drinking water and fountains in {name} | Neraki"
+            desc = f"{total} known drinking-water points (fountains, taps, springs) in {name}. List and map, with data from OpenStreetMap."
+            h1 = f"Drinking water: {name}"
+            lead = f"{total} known points in {name}, {drink} of them marked as drinking water in the map data."
+            h_points = f"Points on the map ({min(total, MAX_LISTED)}{' of ' + str(total) if total > MAX_LISTED else ''})"
+            miss = (f'Know a fountain or spring that isn\'t shown here, or one that doesn\'t work? <a href="{esc(map_link(lang, clat, clon, 16))}">Open the map</a> '
+                    f'and tap “Missing a fountain?” to report it. The data is refreshed every week'
+                    f'{(" (last update: " + esc(generated) + ")") if generated else ""}.')
         parent = muni_unit.get(rel) if a["level"] == "municipality" else None
+        crumbs = [(x["brand"], base if lang == "el" else base + "?lang=en"), (x["areas"], index_url(lang))]
+        crumb_html = f'<a href="{esc(crumbs[0][1])}">{x["brand"]}</a> › <a href="{esc(index_url(lang))}">{x["areas"]}</a>'
         if parent and parent in info:
-            crumbs.append((info[parent]["el"], area_url(parent)))
-            crumb_html += f' › <a href="{esc(area_url(parent))}">{esc(info[parent]["el"])}</a>'
-        crumbs.append((a["el"], area_url(rel)))
-        crumb_html += f" › {esc(a['el'])}"
-        listed = order(fs)[:MAX_LISTED]
+            crumbs.append((info[parent][lang], area_url(parent, lang)))
+            crumb_html += f' › <a href="{esc(area_url(parent, lang))}">{esc(info[parent][lang])}</a>'
+        crumbs.append((name, area_url(rel, lang)))
+        crumb_html += f" › {esc(name)}"
         body = f"""<nav class="crumbs">{crumb_html}</nav>
-<h1>Πόσιμο νερό: {esc(a['el'])}</h1>
-<p class="lead">{total} γνωστά σημεία {esc(kind_name)}, από τα οποία {drink} δηλώνονται ως πόσιμο νερό στα δεδομένα του χάρτη.</p>
-<a class="cta" href="{esc(map_link(clat, clon, z))}">Άνοιγμα στον χάρτη</a>
-<div class="stats"><div class="stat"><b>{total}</b><span>σημεία συνολικά</span></div><div class="stat"><b>{drink}</b><span>πόσιμο νερό</span></div><div class="stat"><b>{total - drink}</b><span>πηγές και κάνουλες (μη επιβεβαιωμένες)</span></div></div>
+<h1>{esc(h1)}</h1>
+<p class="lead">{esc(lead)}</p>
+<a class="cta" href="{esc(map_link(lang, clat, clon, z))}">{x['open_map']}</a>
+<div class="stats"><div class="stat"><b>{total}</b><span>{x['s_total']}</span></div><div class="stat"><b>{drink}</b><span>{x['s_drink']}</span></div><div class="stat"><b>{total - drink}</b><span>{x['s_other']}</span></div></div>
 """
+        sib_html = ""
         if a["level"] == "unit":
-            kids = [(k, info[k]) for k in muni_unit if muni_unit[k] == rel and len(by_muni.get(k, [])) >= MIN_POINTS]
-            kids.sort(key=lambda kv: -len(by_muni[kv[0]]))
+            kids = [k for k in muni_unit if muni_unit[k] == rel and len(by_muni.get(k, [])) >= MIN_POINTS]
+            kids.sort(key=lambda k: -len(by_muni[k]))
             if kids:
-                body += "<h2>Δήμοι</h2><ul class=\"grid\">" + "".join(
-                    f'<li><a href="{esc(area_url(k))}">{esc(v["el"])}<span>{len(by_muni[k])}</span></a></li>' for k, v in kids) + "</ul>"
+                body += f'<h2>{x["h_munis"]}</h2><ul class="grid">' + "".join(
+                    f'<li><a href="{esc(area_url(k, lang))}">{esc(info[k][lang])}<span>{len(by_muni[k])}</span></a></li>' for k in kids) + "</ul>"
         else:
             sib = [k for k in muni_unit if muni_unit[k] == parent and k != rel and len(by_muni.get(k, [])) >= MIN_POINTS]
             sib.sort(key=lambda k: -len(by_muni[k]))
-            sib_html = "".join(f'<li><a href="{esc(area_url(k))}">{esc(info[k]["el"])}<span>{len(by_muni[k])}</span></a></li>' for k in sib[:10])
-        body += f"<h2>Σημεία στον χάρτη ({len(listed)}{' από ' + str(total) if total > len(listed) else ''})</h2><ul class=\"list\">" + "".join(point_li(f) for f in listed) + "</ul>"
-        if a["level"] == "municipality" and sib_html:
-            body += f'<h2>Γειτονικοί δήμοι στην ίδια ενότητα</h2><ul class="grid">{sib_html}</ul>'
-        body += f'<h2>Λείπει κάποια βρύση;</h2><p>Ξέρεις μια βρύση ή πηγή που δεν φαίνεται εδώ, ή μία που δεν δουλεύει; <a href="{esc(map_link(clat, clon, 16))}">Άνοιξε τον χάρτη</a> και πάτα «Λείπει βρύση;» για να το αναφέρεις. Τα δεδομένα ενημερώνονται κάθε εβδομάδα{(" (τελευταία ενημέρωση: " + esc(generated) + ")") if generated else ""}.</p>'
-        write(a["slug"], page(title, desc, area_url(rel), body, base, crumbs))
-        urls.append(area_url(rel))
+            sib_html = "".join(f'<li><a href="{esc(area_url(k, lang))}">{esc(info[k][lang])}<span>{len(by_muni[k])}</span></a></li>' for k in sib[:10])
+        body += f'<h2>{esc(h_points)}</h2><ul class="list">' + "".join(point_li(lang, f) for f in order(fs)[:MAX_LISTED]) + "</ul>"
+        if sib_html:
+            body += f'<h2>{x["h_neigh"]}</h2><ul class="grid">{sib_html}</ul>'
+        body += f'<h2>{x["h_missing"]}</h2><p>{miss}</p>'
+        alts = {"el": area_url(rel, "el"), "en": area_url(rel, "en"), "x-default": area_url(rel, "el")}
+        files[f"{DIRS[lang]}/{a['slug']}/index.html"] = page(lang, title, desc, area_url(rel, lang), body, base, crumbs, alts)
+        urls.append(area_url(rel, lang))
 
+    made = 0
     for rel in info:
         fs = by_unit.get(rel, []) if info[rel]["level"] == "unit" else by_muni.get(rel, [])
         if len(fs) >= MIN_POINTS:
-            area_page(rel, fs); made += 1
+            for lang in ("el", "en"):
+                area_page(lang, rel, fs)
+            made += 1
 
-    # index page
-    unit_rows = sorted(((rel, info[rel]) for rel in info if info[rel]["level"] == "unit" and len(by_unit.get(rel, [])) >= MIN_POINTS),
-                       key=lambda kv: kv[1]["el"])
     total_pts = len(feats)
-    idx_body = f"""<nav class="crumbs"><a href="{esc(base)}">Νεράκι</a> › Περιοχές</nav>
-<h1>Πόσιμο νερό στην Ελλάδα, ανά περιοχή</h1>
-<p class="lead">{total_pts} γνωστά σημεία με βρύσες, κάνουλες και πηγές, ταξινομημένα ανά περιφερειακή ενότητα και δήμο. Δεδομένα από το OpenStreetMap, ενημερωμένα κάθε εβδομάδα.</p>
-<a class="cta" href="{esc(base)}">Άνοιγμα του χάρτη</a>
-<h2>Περιφερειακές ενότητες</h2>
-<ul class="grid">""" + "".join(f'<li><a href="{esc(area_url(r))}">{esc(v["el"])}<span>{len(by_unit[r])}</span></a></li>' for r, v in unit_rows) + "</ul>"
-    open(os.path.join(root, "index.html"), "w").write(page(
-        "Πόσιμο νερό στην Ελλάδα ανά περιοχή | Νεράκι",
-        f"{total_pts} βρύσες, κάνουλες και πηγές πόσιμου νερού στην Ελλάδα, ανά περιφερειακή ενότητα και δήμο.",
-        f"{base}vryses/", idx_body, base, [("Νεράκι", base), ("Περιοχές", f"{base}vryses/")]))
+    unit_rows = [(rel, info[rel]) for rel in info if info[rel]["level"] == "unit" and len(by_unit.get(rel, [])) >= MIN_POINTS]
+    for lang in ("el", "en"):
+        x = TXT[lang]
+        rows = sorted(unit_rows, key=lambda kv: kv[1][lang])
+        home = base if lang == "el" else base + "?lang=en"
+        if lang == "el":
+            title, desc = "Πόσιμο νερό στην Ελλάδα ανά περιοχή | Νεράκι", f"{total_pts} βρύσες, κάνουλες και πηγές πόσιμου νερού στην Ελλάδα, ανά περιφερειακή ενότητα και δήμο."
+            h1 = "Πόσιμο νερό στην Ελλάδα, ανά περιοχή"
+            lead = f"{total_pts} γνωστά σημεία με βρύσες, κάνουλες και πηγές, ταξινομημένα ανά περιφερειακή ενότητα και δήμο. Δεδομένα από το OpenStreetMap, ενημερωμένα κάθε εβδομάδα."
+            h2 = "Περιφερειακές ενότητες"
+        else:
+            title, desc = "Drinking water in Greece by area | Neraki", f"{total_pts} drinking fountains, taps and springs in Greece, by regional unit and municipality."
+            h1 = "Drinking water in Greece, by area"
+            lead = f"{total_pts} known fountains, taps and springs, sorted by regional unit and municipality. Data from OpenStreetMap, refreshed every week."
+            h2 = "Regional units"
+        body = (f'<nav class="crumbs"><a href="{esc(home)}">{x["brand"]}</a> › {x["areas"]}</nav>\n<h1>{esc(h1)}</h1>\n<p class="lead">{esc(lead)}</p>\n'
+                f'<a class="cta" href="{esc(home)}">{x["open_map_full"]}</a>\n<h2>{h2}</h2>\n<ul class="grid">'
+                + "".join(f'<li><a href="{esc(area_url(r, lang))}">{esc(v[lang])}<span>{len(by_unit[r])}</span></a></li>' for r, v in rows) + "</ul>")
+        alts = {"el": index_url("el"), "en": index_url("en"), "x-default": index_url("el")}
+        files[f"{DIRS[lang]}/index.html"] = page(lang, title, desc, index_url(lang), body, base, [(x["brand"], home), (x["areas"], index_url(lang))], alts)
+        urls.append(index_url(lang))
 
+    for rel_path, content in files.items():
+        full = os.path.join(out_dir, rel_path)
+        os.makedirs(os.path.dirname(full), exist_ok=True)
+        open(full, "w").write(content)
     open(os.path.join(out_dir, "sitemap.xml"), "w").write(
         '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-        + "".join(f"<url><loc>{esc(u)}</loc></url>\n" for u in urls) + "</urlset>\n")
+        + "".join(f"<url><loc>{esc(u)}</loc></url>\n" for u in [base] + sorted(urls)) + "</urlset>\n")
     open(os.path.join(out_dir, "robots.txt"), "w").write(f"User-agent: *\nAllow: /\nSitemap: {base}sitemap.xml\n")
-    print(f"{made} area pages + index; {len(urls)} URLs in sitemap; points outside every municipality: "
-          f"{len(feats) - sum(len(v) for v in by_muni.values())}")
+    print(f"{made} areas x 2 languages = {len(files)} pages (with indexes); {len(urls) + 1} URLs in sitemap; "
+          f"points outside every municipality: {len(feats) - sum(len(v) for v in by_muni.values())}")
 
 
 if __name__ == "__main__":
