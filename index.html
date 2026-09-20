@@ -94,6 +94,8 @@
   .maplibregl-popup-close-button { color: var(--fg); font-size: 18px; }
   .pop h3 { margin: 0 24px 4px 0; font-size: 15px; }
   .pop p { margin: 2px 0; color: var(--muted); font-size: 13px; }
+  .badges { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0 2px; }
+  .badge { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
   .pop .links { margin-top: 8px; display: flex; gap: 12px; flex-wrap: wrap; font-size: 13px; }
   .pop a { color: var(--accent); }
   .pop .dir { display: inline-block; margin-top: 8px; background: var(--accent); color: #fff !important; text-decoration: none; padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 13px; }
@@ -219,7 +221,7 @@ const T = {
   el: {
     title: "Πόσιμο νερό", ok: "ΟΚ", cancel: "Άκυρο",
     gDrink: "Πόσιμο νερό", gOther: "Πηγές & κάνουλες",
-    fountain: "Βρύση", tap: "Κάνουλα", spring: "Πηγή", point: "Σημείο νερού", bottle: "Γέμισμα μπουκαλιού: ναι",
+    fountain: "Βρύση", tap: "Κάνουλα", spring: "Πηγή", point: "Σημείο νερού", bottle: "Γέμισμα μπουκαλιού", free: "Δωρεάν",
     menuPlaces: "Μέρη", menuMap: "Τύπος χάρτη", menuShare: "Κοινοποίηση", copied: "Ο σύνδεσμος αντιγράφηκε", theme: "Θέμα", theme_auto: "Αυτόματο", theme_light: "Φωτεινό", theme_dark: "Σκούρο", mapStandard: "Κανονικός", mapTerrain: "Ανάγλυφο", mapTerrainNote: "Σκιασμένο ανάγλυφο, καλό για βουνά και πεζοπορία.", mapSat: "Δορυφόρος", mapSatNote: "Sentinel-2, 2016, περίπου 10 μ. ανάλυση. Καλός για βουνά και βλάστηση, όχι για λεπτομέρειες δρόμων.", route: "Διαδρομή GPX", menuAbout: "Σχετικά", menuSupport: "Στήριξη",
     placesTitle: "Μετάβαση σε μέρος", placesSearch: "Αναζήτηση…", pts: n => `${n} σημεία`,
     legendDrink: "Πόσιμο νερό: σημεία που το OpenStreetMap δηλώνει ως πόσιμο νερό.",
@@ -248,7 +250,7 @@ const T = {
   en: {
     title: "Drinking water", ok: "OK", cancel: "Cancel",
     gDrink: "Drinking water", gOther: "Springs & taps",
-    fountain: "Fountain", tap: "Tap", spring: "Spring", point: "Water point", bottle: "Bottle refill: yes",
+    fountain: "Fountain", tap: "Tap", spring: "Spring", point: "Water point", bottle: "Bottle refill", free: "Free",
     menuPlaces: "Places", menuMap: "Map type", menuShare: "Share", copied: "Link copied", theme: "Theme", theme_auto: "Auto", theme_light: "Light", theme_dark: "Dark", mapStandard: "Standard", mapTerrain: "Terrain", mapTerrainNote: "Shaded relief, good for mountains and hiking.", mapSat: "Satellite", mapSatNote: "Sentinel-2, 2016, about 10 m resolution. Good for mountains and vegetation, not for street details.", route: "Route (GPX)", menuAbout: "About", menuSupport: "Support",
     placesTitle: "Jump to a place", placesSearch: "Search…", pts: n => `${n} points`,
     legendDrink: "Drinking water: points OpenStreetMap lists as drinking water.",
@@ -422,9 +424,16 @@ function popupNode(f) {
   const line = txt => { const e = document.createElement("p"); e.textContent = txt; div.append(e); };
   line(`${t("drinkable")}: ${p.drinking_water === "yes" ? t("drinkableYes") : p.kind === "fountain" ? t("drinkableListed") : t("drinkableUnknown")}`);
   if (userPos) line(`${fmtDist(haversine(userPos, [lon, lat]))} ${t("away")}`);
-  if (p.bottle === "yes") line(t("bottle"));
+  const badges = [];
+  if (p.fee === "no") badges.push(t("free"));
+  if (p.bottle === "yes") badges.push(t("bottle"));
+  if (badges.length) {
+    const row = document.createElement("div"); row.className = "badges";
+    for (const b of badges) { const e = document.createElement("span"); e.className = "badge"; e.textContent = b; row.append(e); }
+    div.append(row);
+  }
   if (p.seasonal) line(`${t("seasonal")}: ${p.seasonal}`);
-  if (p.fee) line(`${t("fee")}: ${p.fee}`);
+  if (p.fee && p.fee !== "no") line(`${t("fee")}: ${p.fee}`);
   if (p.opening_hours) line(`${t("hours")}: ${p.opening_hours}`);
   if (p.check_date) line(`${t("checked")}: ${p.check_date}`);
   if (p.description) line(`${t("note")}: ${p.description}`);
