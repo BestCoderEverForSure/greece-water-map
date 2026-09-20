@@ -95,7 +95,7 @@ ul.list li a.n{{font-weight:600;text-decoration:none}}.badge{{font-size:12px;fon
 <main>
 {body}
 </main>
-<footer>Τα δεδομένα είναι από το OpenStreetMap (© OpenStreetMap contributors, ODbL). Το νερό δεν είναι εγγυημένα ασφαλές: οι πληροφορίες προέρχονται από χρήστες του OSM και δεν έχουν ελεγχθεί από εμάς. Αν δεν είσαι σίγουρος, ρώτα ή πάρε δικό σου νερό.</footer>
+<footer>Τα δεδομένα είναι από το OpenStreetMap, έναν ανοιχτό χάρτη που φτιάχνουν εθελοντές (© OpenStreetMap contributors, ODbL). Το νερό δεν είναι εγγυημένα ασφαλές: οι πληροφορίες προέρχονται από εθελοντές και δεν έχουν ελεγχθεί από εμάς. Αν δεν είσαι σίγουρος, ρώτα ή πάρε δικό σου νερό.</footer>
 </body>
 </html>
 """
@@ -195,7 +195,7 @@ def main(water_path, areas_path, out_dir, base="https://bestcodereverforsure.git
         listed = order(fs)[:MAX_LISTED]
         body = f"""<nav class="crumbs">{crumb_html}</nav>
 <h1>Πόσιμο νερό: {esc(a['el'])}</h1>
-<p class="lead">{total} γνωστά σημεία {esc(kind_name)}, από τα οποία {drink} δηλώνονται ως πόσιμο νερό στο OpenStreetMap.</p>
+<p class="lead">{total} γνωστά σημεία {esc(kind_name)}, από τα οποία {drink} δηλώνονται ως πόσιμο νερό στα δεδομένα του χάρτη.</p>
 <a class="cta" href="{esc(map_link(clat, clon, z))}">Άνοιγμα στον χάρτη</a>
 <div class="stats"><div class="stat"><b>{total}</b><span>σημεία συνολικά</span></div><div class="stat"><b>{drink}</b><span>πόσιμο νερό</span></div><div class="stat"><b>{total - drink}</b><span>πηγές και κάνουλες (μη επιβεβαιωμένες)</span></div></div>
 """
@@ -212,7 +212,7 @@ def main(water_path, areas_path, out_dir, base="https://bestcodereverforsure.git
         body += f"<h2>Σημεία στον χάρτη ({len(listed)}{' από ' + str(total) if total > len(listed) else ''})</h2><ul class=\"list\">" + "".join(point_li(f) for f in listed) + "</ul>"
         if a["level"] == "municipality" and sib_html:
             body += f'<h2>Γειτονικοί δήμοι στην ίδια ενότητα</h2><ul class="grid">{sib_html}</ul>'
-        body += f'<h2>Λείπει κάποια βρύση;</h2><p>Ξέρεις μια βρύση ή πηγή που δεν φαίνεται εδώ, ή μία που δεν δουλεύει; <a href="{esc(map_link(clat, clon, 16))}">Άνοιξε τον χάρτη</a> και πάτα «Λείπει βρύση;» για να το αναφέρεις στο OpenStreetMap. Τα δεδομένα ενημερώνονται κάθε εβδομάδα{(" (τελευταία ενημέρωση: " + esc(generated) + ")") if generated else ""}.</p>'
+        body += f'<h2>Λείπει κάποια βρύση;</h2><p>Ξέρεις μια βρύση ή πηγή που δεν φαίνεται εδώ, ή μία που δεν δουλεύει; <a href="{esc(map_link(clat, clon, 16))}">Άνοιξε τον χάρτη</a> και πάτα «Λείπει βρύση;» για να το αναφέρεις. Τα δεδομένα ενημερώνονται κάθε εβδομάδα{(" (τελευταία ενημέρωση: " + esc(generated) + ")") if generated else ""}.</p>'
         write(a["slug"], page(title, desc, area_url(rel), body, base, crumbs))
         urls.append(area_url(rel))
 
