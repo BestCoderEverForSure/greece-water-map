@@ -11,7 +11,7 @@
 <style>
   :root {
     --bg: #ffffff; --fg: #14202b; --muted: #5b6b7a; --line: #d9e1e8; --card: #ffffff;
-    --fountain: #1478d4; --tap: #0e9384; --spring: #4f9a2a; --accent: #1478d4;
+    --drink: #1478d4; --other: #0e9384; --accent: #1478d4;
     --shadow: 0 2px 10px rgba(10, 30, 50, .18);
   }
   @media (prefers-color-scheme: dark) {
@@ -20,28 +20,56 @@
   * { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; }
   body { font: 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--fg); overflow: hidden; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  a { color: var(--accent); }
   #map { position: absolute; inset: 0; }
+
+  /* top bar */
   .top { position: absolute; top: 0; left: 0; right: 0; padding: max(10px, env(safe-area-inset-top)) 12px 0; display: flex; flex-direction: column; gap: 8px; pointer-events: none; z-index: 2; }
   .top > * { pointer-events: auto; }
   .bar { display: flex; gap: 8px; align-items: center; }
   .title { background: var(--card); border-radius: 12px; padding: 9px 12px; box-shadow: var(--shadow); font-weight: 650; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .title small { font-weight: 400; color: var(--muted); margin-left: 6px; }
   @media (max-width: 480px) { .title small { display: none; } }
-  button { font: inherit; color: inherit; cursor: pointer; }
   .icon { background: var(--card); border: 0; border-radius: 12px; height: 38px; min-width: 38px; padding: 0 12px; box-shadow: var(--shadow); font-weight: 600; }
   .chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
   .chips::-webkit-scrollbar { display: none; }
-  .chip { flex: none; display: flex; align-items: center; gap: 6px; background: var(--card); border: 1.5px solid var(--line); border-radius: 999px; padding: 6px 12px; box-shadow: var(--shadow); }
-  .chip i { width: 10px; height: 10px; border-radius: 50%; display: block; }
+  .chip { flex: none; display: flex; align-items: center; gap: 7px; background: var(--card); border: 1.5px solid var(--line); border-radius: 999px; padding: 6px 12px; box-shadow: var(--shadow); }
+  .chip i { width: 11px; height: 11px; border-radius: 50%; display: block; background: var(--drink); }
+  .chip i.ring { background: transparent; border: 2.5px solid var(--other); }
   .chip[aria-pressed="false"] { opacity: .5; }
-  .chip[aria-pressed="false"] i { background: var(--muted) !important; }
-  .chip.city { background: color-mix(in srgb, var(--accent) 12%, var(--card)); border-color: transparent; font-weight: 600; }
-  .fab { position: absolute; right: 10px; bottom: 150px; z-index: 2; display: flex; align-items: center; gap: 6px; background: var(--accent); color: #fff; border: 0; border-radius: 999px; padding: 10px 14px; box-shadow: var(--shadow); font-weight: 600; text-decoration: none; }
-  .fab:hover { filter: brightness(1.08); }
+  .chip[aria-pressed="false"] i { background: var(--muted); }
+  .chip[aria-pressed="false"] i.ring { background: transparent; border-color: var(--muted); }
+
+  .menu { position: absolute; right: 12px; top: calc(max(10px, env(safe-area-inset-top)) + 46px); z-index: 5; background: var(--card); border-radius: 12px; box-shadow: var(--shadow); padding: 6px; min-width: 200px; display: flex; flex-direction: column; }
+  .menu[hidden] { display: none; }
+  .menu button, .menu a { text-align: left; background: none; border: 0; border-radius: 8px; padding: 10px 12px; color: var(--fg); text-decoration: none; font: inherit; display: block; }
+  .menu button:hover, .menu a:hover, .menu button:focus-visible, .menu a:focus-visible { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+  .menu [hidden] { display: none; }
+
   .nudge { align-self: flex-start; display: none; align-items: center; gap: 8px; background: var(--card); border-radius: 12px; padding: 7px 8px 7px 12px; box-shadow: var(--shadow); font-size: 13px; }
   .nudge.show { display: flex; }
   .nudge button { border: 0; border-radius: 8px; background: var(--accent); color: #fff; padding: 4px 10px; font-weight: 600; }
-  .pop .dir { display: inline-block; margin-top: 8px; background: var(--accent); color: #fff !important; text-decoration: none; padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 13px; }
+
+  .fab { position: absolute; right: 10px; bottom: 200px; z-index: 2; display: flex; align-items: center; gap: 6px; background: var(--accent); color: #fff; border: 0; border-radius: 999px; padding: 10px 14px; box-shadow: var(--shadow); font-weight: 600; }
+  .fab:hover { filter: brightness(1.08); }
+  .maplibregl-ctrl-bottom-right { bottom: 46px; }
+
+  .toast { position: absolute; left: 50%; bottom: 120px; transform: translateX(-50%); background: #14202b; color: #fff; padding: 9px 14px; border-radius: 12px; z-index: 6; font-size: 13px; max-width: 86%; text-align: center; opacity: 0; pointer-events: none; transition: opacity .2s; }
+  .toast.show { opacity: 1; }
+
+  /* bottom sheet */
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--card); border-radius: 18px 18px 0 0; box-shadow: 0 -2px 14px rgba(0,0,0,.2); z-index: 3; max-height: 55%; display: flex; flex-direction: column; transform: translateY(calc(100% - 46px)); transition: transform .25s ease; padding-bottom: env(safe-area-inset-bottom); }
+  .sheet.open { transform: none; }
+  .grab { border: 0; background: none; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; width: 100%; font-weight: 600; }
+  .grab::before { content: ""; position: absolute; top: 6px; left: 50%; width: 36px; height: 4px; margin-left: -18px; border-radius: 2px; background: var(--line); }
+  .list { overflow-y: auto; margin: 0; padding: 0 8px 8px; list-style: none; }
+  .list li button { width: 100%; text-align: left; background: none; border: 0; border-radius: 10px; padding: 9px 10px; display: flex; gap: 10px; align-items: center; }
+  .list li button:hover, .list li button:focus-visible { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+  .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; background: var(--drink); }
+  .dot.ring { background: transparent; border: 2.5px solid var(--other); }
+  .dist { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .empty { padding: 4px 16px 14px; color: var(--muted); }
   .rctl { padding: 0 16px 8px; font-size: 13px; }
   .rctl[hidden] { display: none; }
   .rsum { font-weight: 600; margin-bottom: 2px; }
@@ -51,17 +79,10 @@
   .rbtns button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
   .rbtns .clear { margin-left: auto; }
   body.drag::after { content: "GPX"; position: fixed; inset: 0; z-index: 9; display: grid; place-items: center; font-size: 42px; font-weight: 700; color: #fff; background: rgba(20,120,212,.55); }
-  .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--card); border-radius: 18px 18px 0 0; box-shadow: 0 -2px 14px rgba(0,0,0,.2); z-index: 3; max-height: 55%; display: flex; flex-direction: column; transform: translateY(calc(100% - 46px)); transition: transform .25s ease; padding-bottom: env(safe-area-inset-bottom); }
-  .sheet.open { transform: none; }
-  .grab { border: 0; background: none; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; width: 100%; font-weight: 600; }
-  .grab::before { content: ""; position: absolute; top: 6px; left: 50%; width: 36px; height: 4px; margin-left: -18px; border-radius: 2px; background: var(--line); }
-  .list { overflow-y: auto; margin: 0; padding: 0 8px 8px; list-style: none; }
-  .list li button { width: 100%; text-align: left; background: none; border: 0; border-radius: 10px; padding: 9px 10px; display: flex; gap: 10px; align-items: center; }
-  .list li button:hover, .list li button:focus-visible { background: color-mix(in srgb, var(--accent) 10%, transparent); }
-  .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
-  .dist { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .empty { padding: 4px 16px 14px; color: var(--muted); }
+
   .foot { position: absolute; left: 8px; bottom: 54px; z-index: 1; font-size: 11px; color: var(--muted); background: color-mix(in srgb, var(--card) 85%, transparent); padding: 2px 6px; border-radius: 6px; max-width: 60%; }
+
+  /* popup */
   .maplibregl-popup-content { background: var(--card); color: var(--fg); border-radius: 12px; padding: 12px 14px; box-shadow: var(--shadow); max-width: 260px; }
   .maplibregl-popup-tip { border-top-color: var(--card) !important; border-bottom-color: var(--card) !important; }
   .maplibregl-popup-close-button { color: var(--fg); font-size: 18px; }
@@ -69,13 +90,26 @@
   .pop p { margin: 2px 0; color: var(--muted); font-size: 13px; }
   .pop .links { margin-top: 8px; display: flex; gap: 12px; flex-wrap: wrap; font-size: 13px; }
   .pop a { color: var(--accent); }
-  dialog { border: 0; border-radius: 16px; padding: 18px 20px; max-width: min(420px, 92vw); background: var(--card); color: var(--fg); box-shadow: var(--shadow); }
+  .pop .dir { display: inline-block; margin-top: 8px; background: var(--accent); color: #fff !important; text-decoration: none; padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 13px; }
+
+  /* dialogs */
+  dialog { border: 0; border-radius: 16px; padding: 18px 20px; width: min(420px, 92vw); background: var(--card); color: var(--fg); box-shadow: var(--shadow); }
   dialog::backdrop { background: rgba(0,0,0,.45); }
   dialog h2 { margin: 0 0 8px; font-size: 17px; }
   dialog p, dialog li { color: var(--muted); }
   dialog .row { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
   .primary { background: var(--accent); color: #fff; border: 0; border-radius: 10px; padding: 8px 14px; font-weight: 600; text-decoration: none; }
-  a { color: var(--accent); }
+  .opts { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+  .opts label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+  .opts input { margin-top: 4px; }
+  .opts small { color: var(--muted); }
+  .legend { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+  .legend div { display: flex; align-items: center; gap: 8px; color: var(--fg); }
+  #pq { width: 100%; padding: 9px 12px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--bg); color: var(--fg); font: inherit; }
+  .plist { list-style: none; margin: 8px 0 0; padding: 0; max-height: 50vh; overflow: auto; }
+  .plist button { width: 100%; text-align: left; background: none; border: 0; border-radius: 10px; padding: 9px 10px; display: flex; gap: 10px; align-items: center; }
+  .plist button:hover, .plist button:focus-visible { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+  .plist .n { margin-left: auto; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
 </style>
 </head>
 <body>
@@ -83,17 +117,24 @@
 
 <div class="top">
   <div class="bar">
-    <div class="title"><span data-i="title"></span><small id="count"></small></div>
-    <button class="icon" id="locate" data-i="near" aria-label="Near me"></button>
-    <button class="icon" id="info" aria-label="Info">i</button>
+    <div class="title"><span data-i="title"></span><small id="count">…</small></div>
     <button class="icon" id="lang">EN</button>
+    <button class="icon" id="menuBtn" aria-label="Menu" aria-expanded="false" aria-controls="menu">☰</button>
   </div>
   <div class="chips" id="chips"></div>
   <div class="nudge" id="nudge"><span id="nudgeText"></span><button id="nudgeBtn" data-i="sparseCta"></button></div>
 </div>
 
-<button class="fab" id="missing"><span aria-hidden="true">＋</span><span data-i="missing"></span></button>
+<div class="menu" id="menu" hidden>
+  <button id="mPlaces" data-i="menuPlaces"></button>
+  <button id="mMap" data-i="menuMap"></button>
+  <button id="mRoute" data-i="route"></button>
+  <button id="mAbout" data-i="menuAbout"></button>
+  <a id="mSupport" hidden target="_blank" rel="noopener" data-i="menuSupport"></a>
+</div>
 
+<button class="fab" id="missing"><span aria-hidden="true">＋</span><span data-i="missing"></span></button>
+<div class="toast" id="toast" role="status"></div>
 <div class="foot">© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a></div>
 
 <section class="sheet" id="sheet" aria-live="polite">
@@ -107,6 +148,23 @@
 </section>
 <input type="file" id="gpxIn" accept=".gpx,application/gpx+xml,text/xml,application/xml" hidden>
 
+<dialog id="pdlg">
+  <h2 data-i="placesTitle"></h2>
+  <input id="pq" type="search" autocomplete="off">
+  <ul class="plist" id="plist"></ul>
+  <div class="row"><button class="icon" id="pClose" data-i="ok"></button></div>
+</dialog>
+
+<dialog id="bdlg">
+  <h2 data-i="menuMap"></h2>
+  <div class="opts">
+    <label><input type="radio" name="bm" value="standard"><span><b data-i="mapStandard"></b></span></label>
+    <label><input type="radio" name="bm" value="terrain"><span><b data-i="mapTerrain"></b><br><small data-i="mapTerrainNote"></small></span></label>
+    <label><input type="radio" name="bm" value="satellite"><span><b data-i="mapSat"></b><br><small data-i="mapSatNote"></small></span></label>
+  </div>
+  <div class="row"><button class="icon" id="bClose" data-i="ok"></button></div>
+</dialog>
+
 <dialog id="mdlg">
   <h2 data-i="missingTitle"></h2>
   <p data-i="missingBody"></p>
@@ -115,6 +173,10 @@
 
 <dialog id="dlg">
   <h2 data-i="aboutTitle"></h2>
+  <div class="legend">
+    <div><i class="dot"></i><span data-i="legendDrink"></span></div>
+    <div><i class="dot ring"></i><span data-i="legendOther"></span></div>
+  </div>
   <p data-i="aboutBody"></p>
   <p data-i="aboutSafety"></p>
   <p data-i="aboutMissing"></p>
@@ -138,57 +200,139 @@ if (GOATCOUNTER) {
   gc.dataset.goatcounter = `https://${GOATCOUNTER}.goatcounter.com/count`;
   document.head.append(gc);
 }
+const startedWithHash = location.hash.length > 1;
+
 const T = {
   el: {
-    title: "Πόσιμο νερό", near: "Κοντά μου", ok: "ΟΚ", missing: "Λείπει βρύση;", directions: "Οδηγίες", donate: "Σου αρέσει ο χάρτης; Κέρασε έναν καφέ ☕", statsNote: "Μετράμε τις επισκέψεις χωρίς cookies και χωρίς προσωπικά στοιχεία.", route: "Διαδρομή GPX", routeTitle: "Κατά μήκος της διαδρομής", within: "Απόσταση:", clearRoute: "Καθαρισμός", routeErr: "Δεν βρέθηκε διαδρομή σε αυτό το αρχείο GPX.", routeNone: "Δεν βρέθηκαν σημεία κοντά στη διαδρομή. Πάρε νερό μαζί σου.", routeNote: "Μετράει μόνο σημεία που ξέρουμε, ίσως υπάρχουν κι άλλα.", routeSum: (len, n, gap) => `${len} χλμ · ${n} σημεία · Μεγαλύτερο διάστημα χωρίς νερό: ${gap} χλμ`, streetView: "Street View", checked: "Τελευταίος έλεγχος", feedback: "Σχόλια ή προβλήματα στη σελίδα", cancel: "Άκυρο", missingGo: "Άνοιγμα σημείωσης", missingTitle: "Λείπει μια βρύση;", missingBody: "Θα ανοίξει μια σημείωση στο OpenStreetMap στο σημείο που βλέπεις τώρα στον χάρτη. Πρώτα μετακίνησε τον χάρτη πάνω στο σημείο. Στη σημείωση γράψε τι είναι (βρύση, κάνουλα, πηγή), πού ακριβώς βρίσκεται και αν τρέχει νερό.", sparse: n => n === 0 ? "Δεν έχουμε κανένα σημείο εδώ. Ξέρεις κάποιο;" : `Μόνο ${n} ${n === 1 ? "σημείο" : "σημεία"} εδώ. Ξέρεις κάποιο που λείπει;`, sparseCta: "Πρόσθεσε", updated: "Δεδομένα από", privacy: "Η τοποθεσία σου και τα αρχεία GPX μένουν στη συσκευή σου και δεν ανεβαίνουν πουθενά.", athens: "Αθήνα", thess: "Θεσσαλονίκη",
-    fountain: "Βρύση", tap: "Κάνουλα", spring: "Πηγή", unnamed: "Χωρίς όνομα",
-    nearest: "Πιο κοντινές", nearestNone: "Πάτα «Κοντά μου» για να δεις τις πιο κοντινές βρύσες.",
-    locating: "Εντοπισμός…", locFail: "Δεν βρέθηκε η τοποθεσία σου. Έλεγξε τα δικαιώματα του browser.",
+    title: "Πόσιμο νερό", ok: "ΟΚ", cancel: "Άκυρο",
+    gDrink: "Πόσιμο νερό", gOther: "Πηγές & κάνουλες",
+    fountain: "Βρύση", tap: "Κάνουλα", spring: "Πηγή", point: "Σημείο νερού", bottle: "Γέμισμα μπουκαλιού: ναι",
+    menuPlaces: "Μέρη", menuMap: "Τύπος χάρτη", mapStandard: "Κανονικός", mapTerrain: "Ανάγλυφο", mapTerrainNote: "Σκιασμένο ανάγλυφο, καλό για βουνά και πεζοπορία.", mapSat: "Δορυφόρος", mapSatNote: "Sentinel-2, 2016, περίπου 10 μ. ανάλυση. Καλός για βουνά και βλάστηση, όχι για λεπτομέρειες δρόμων.", route: "Διαδρομή GPX", menuAbout: "Σχετικά", menuSupport: "Στήριξη ☕",
+    placesTitle: "Μετάβαση σε μέρος", placesSearch: "Αναζήτηση…", pts: n => `${n} σημεία`,
+    legendDrink: "Πόσιμο νερό: σημεία που το OpenStreetMap δηλώνει ως πόσιμο νερό.",
+    legendOther: "Πηγές και κάνουλες: το OpenStreetMap δεν λέει αν το νερό είναι πόσιμο. Έλεγξε πριν πιεις.",
+    missing: "Λείπει βρύση;", missingTitle: "Λείπει μια βρύση;", missingGo: "Άνοιγμα σημείωσης",
+    missingBody: "Θα ανοίξει μια σημείωση στο OpenStreetMap στο σημείο που βλέπεις τώρα στον χάρτη. Πρώτα μετακίνησε τον χάρτη πάνω στο σημείο. Στη σημείωση γράψε τι είναι (βρύση, κάνουλα, πηγή), πού ακριβώς βρίσκεται και αν τρέχει νερό.",
+    sparse: n => n === 0 ? "Δεν έχουμε κανένα σημείο εδώ. Ξέρεις κάποιο;" : `Μόνο ${n} ${n === 1 ? "σημείο" : "σημεία"} εδώ. Ξέρεις κάποιο που λείπει;`, sparseCta: "Πρόσθεσε",
+    nearest: "Πιο κοντινές", nearestNone: "Πάτα το κουμπί τοποθεσίας στον χάρτη για να δεις τις πιο κοντινές βρύσες.",
     noResults: "Δεν βρέθηκε τίποτα κοντά σου με αυτά τα φίλτρα.",
+    locFail: "Δεν βρέθηκε η τοποθεσία σου. Έλεγξε τα δικαιώματα του browser.",
+    outside: "Φαίνεται ότι είσαι εκτός Ελλάδας. Δείχνουμε την Αθήνα.",
     points: n => n.toLocaleString("el") + " σημεία",
-    drinkable: "Νερό", drinkableYes: "σημειωμένο ως πόσιμο", drinkableListed: "καταχωρημένο ως πόσιμο στο OSM, δεν έχει ελεγχθεί", drinkableUnknown: "η ποιότητα δεν αναφέρεται",
-    seasonal: "Εποχιακό", fee: "Χρέωση", hours: "Ώρες", note: "Σημείωση",
-    viewOsm: "Δες στο OSM", report: "Πρόβλημα / λείπει κάτι;", km: "χλμ", m: "μ",
+    drinkable: "Νερό", drinkableYes: "σημειωμένο ως πόσιμο", drinkableListed: "καταχωρημένο ως πόσιμο στο OSM, δεν έχει ελεγχθεί", drinkableUnknown: "το OSM δεν λέει αν είναι πόσιμο",
+    seasonal: "Εποχιακό", fee: "Χρέωση", hours: "Ώρες", note: "Σημείωση", checked: "Τελευταίος έλεγχος", away: "από εσένα",
+    viewOsm: "Δες στο OSM", report: "Πρόβλημα / λείπει κάτι;", directions: "Οδηγίες", streetView: "Street View", km: "χλμ", m: "μ",
+    routeTitle: "Κατά μήκος της διαδρομής", within: "Απόσταση:", clearRoute: "Καθαρισμός", routeErr: "Δεν βρέθηκε διαδρομή σε αυτό το αρχείο GPX.",
+    routeNone: "Δεν βρέθηκαν σημεία κοντά στη διαδρομή. Πάρε νερό μαζί σου.", routeNote: "Μετράει μόνο σημεία που ξέρουμε, ίσως υπάρχουν κι άλλα.",
+    routeSum: (len, n, gap) => `${len} χλμ · ${n} σημεία · Μεγαλύτερο διάστημα χωρίς νερό: ${gap} χλμ`,
     aboutTitle: "Για τον χάρτη",
-    aboutBody: "Δείχνει βρύσες, κάνουλες και πηγές πόσιμου νερού στην Ελλάδα. Τα δεδομένα είναι από το OpenStreetMap και τα ενημερώνουμε τακτικά. Δεν είναι πλήρη: σε πολλές πόλεις λείπουν σημεία.",
+    aboutBody: "Δείχνει βρύσες, κάνουλες και πηγές στην Ελλάδα. Τα δεδομένα είναι από το OpenStreetMap και τα ενημερώνουμε τακτικά. Δεν είναι πλήρη: σε πολλές πόλεις λείπουν σημεία.",
     aboutSafety: "Το νερό δεν είναι εγγυημένα ασφαλές. Οι πληροφορίες είναι από χρήστες του OSM και δεν ελέγχονται από εμάς. Αν δεν είσαι σίγουρος, ρώτα ή πάρε δικό σου νερό.",
-    aboutMissing: "Βρήκες μια βρύση που λείπει ή δεν δουλεύει; Πάτα «Πρόβλημα / λείπει κάτι;» σε οποιοδήποτε σημείο, ή δες τη σελίδα OpenStreetMap για να την προσθέσεις.",
+    aboutMissing: "Βρήκες μια βρύση που λείπει ή δεν δουλεύει; Πάτα «Λείπει βρύση;» ή «Πρόβλημα / λείπει κάτι;» σε ένα σημείο.",
+    privacy: "Η τοποθεσία σου και τα αρχεία GPX μένουν στη συσκευή σου και δεν ανεβαίνουν πουθενά.",
+    updated: "Δεδομένα από", donate: "Σου αρέσει ο χάρτης; Κέρασε έναν καφέ ☕", statsNote: "Μετράμε τις επισκέψεις χωρίς cookies και χωρίς προσωπικά στοιχεία.", feedback: "Σχόλια ή προβλήματα στη σελίδα",
   },
   en: {
-    title: "Drinking water", near: "Near me", ok: "OK", missing: "Missing a fountain?", directions: "Directions", donate: "Like the map? Buy me a coffee ☕", statsNote: "We count visits without cookies or personal data.", route: "Route (GPX)", routeTitle: "Along the route", within: "Within:", clearRoute: "Clear", routeErr: "No route found in that GPX file.", routeNone: "No points found near this route. Carry water.", routeNote: "Counts only points we know about, more may exist.", routeSum: (len, n, gap) => `${len} km · ${n} points · Longest stretch without water: ${gap} km`, streetView: "Street View", checked: "Last checked", feedback: "Feedback or problems with this page", cancel: "Cancel", missingGo: "Open note", missingTitle: "Missing a fountain?", missingBody: "This opens an OpenStreetMap note at the spot you see on the map now. First move the map onto the spot. In the note, say what it is (fountain, tap, spring), exactly where it is, and whether water flows.", sparse: n => n === 0 ? "No points here yet. Know one?" : `Only ${n} ${n === 1 ? "point" : "points"} here. Know one that's missing?`, sparseCta: "Add", updated: "Data from", privacy: "Your location and GPX files stay on your device and aren't uploaded.", athens: "Athens", thess: "Thessaloniki",
-    fountain: "Fountain", tap: "Tap", spring: "Spring", unnamed: "Unnamed",
-    nearest: "Nearest", nearestNone: "Tap “Near me” to see the closest fountains.",
-    locating: "Locating…", locFail: "Couldn't get your location. Check your browser permissions.",
+    title: "Drinking water", ok: "OK", cancel: "Cancel",
+    gDrink: "Drinking water", gOther: "Springs & taps",
+    fountain: "Fountain", tap: "Tap", spring: "Spring", point: "Water point", bottle: "Bottle refill: yes",
+    menuPlaces: "Places", menuMap: "Map type", mapStandard: "Standard", mapTerrain: "Terrain", mapTerrainNote: "Shaded relief, good for mountains and hiking.", mapSat: "Satellite", mapSatNote: "Sentinel-2, 2016, about 10 m resolution. Good for mountains and vegetation, not for street details.", route: "Route (GPX)", menuAbout: "About", menuSupport: "Support ☕",
+    placesTitle: "Jump to a place", placesSearch: "Search…", pts: n => `${n} points`,
+    legendDrink: "Drinking water: points OpenStreetMap lists as drinking water.",
+    legendOther: "Springs and taps: OpenStreetMap doesn't say if the water is drinkable. Check before you drink.",
+    missing: "Missing a fountain?", missingTitle: "Missing a fountain?", missingGo: "Open note",
+    missingBody: "This opens an OpenStreetMap note at the spot you see on the map now. First move the map onto the spot. In the note, say what it is (fountain, tap, spring), exactly where it is, and whether water flows.",
+    sparse: n => n === 0 ? "No points here yet. Know one?" : `Only ${n} ${n === 1 ? "point" : "points"} here. Know one that's missing?`, sparseCta: "Add",
+    nearest: "Nearest", nearestNone: "Tap the location button on the map to see the closest fountains.",
     noResults: "Nothing found near you with these filters.",
+    locFail: "Couldn't get your location. Check your browser permissions.",
+    outside: "You seem to be outside Greece. Showing Athens.",
     points: n => n.toLocaleString("en") + " points",
-    drinkable: "Water", drinkableYes: "tagged as drinkable", drinkableListed: "listed as drinking water in OSM, not verified", drinkableUnknown: "quality not stated",
-    seasonal: "Seasonal", fee: "Fee", hours: "Hours", note: "Note",
-    viewOsm: "View on OSM", report: "Problem / missing one?", km: "km", m: "m",
+    drinkable: "Water", drinkableYes: "tagged as drinkable", drinkableListed: "listed as drinking water in OSM, not verified", drinkableUnknown: "OSM doesn't say if it's drinkable",
+    seasonal: "Seasonal", fee: "Fee", hours: "Hours", note: "Note", checked: "Last checked", away: "away",
+    viewOsm: "View on OSM", report: "Problem / missing one?", directions: "Directions", streetView: "Street View", km: "km", m: "m",
+    routeTitle: "Along the route", within: "Within:", clearRoute: "Clear", routeErr: "No route found in that GPX file.",
+    routeNone: "No points found near this route. Carry water.", routeNote: "Counts only points we know about, more may exist.",
+    routeSum: (len, n, gap) => `${len} km · ${n} points · Longest stretch without water: ${gap} km`,
     aboutTitle: "About this map",
-    aboutBody: "Shows drinking fountains, taps and springs in Greece. Data is from OpenStreetMap and refreshed regularly. It's incomplete: many towns are missing points.",
+    aboutBody: "Shows fountains, taps and springs in Greece. Data is from OpenStreetMap and refreshed regularly. It's incomplete: many towns are missing points.",
     aboutSafety: "Water isn't guaranteed safe. Info comes from OSM users and isn't checked by us. If you're unsure, ask locally or carry your own water.",
-    aboutMissing: "Found one that's missing or broken? Tap “Problem / missing one?” on any point, or open OpenStreetMap to add it.",
+    aboutMissing: "Found one that's missing or broken? Tap “Missing a fountain?” or “Problem / missing one?” on a point.",
+    privacy: "Your location and GPX files stay on your device and aren't uploaded.",
+    updated: "Data from", donate: "Like the map? Buy me a coffee ☕", statsNote: "We count visits without cookies or personal data.", feedback: "Feedback or problems with this page",
   },
 };
 let lang = (navigator.language || "el").toLowerCase().startsWith("el") ? "el" : "en";
 try { lang = localStorage.getItem("lang") || lang; } catch (e) {}
 const t = k => T[lang][k];
 
-const KINDS = { fountain: "#1478d4", tap: "#0e9384", spring: "#4f9a2a" };
-const active = new Set(Object.keys(KINDS));
-let data = null, userPos = null, marker = null;
+// ---- places (centre points are approximate)
+const PLACES = [
+  ["Αθήνα", "Athens", 37.9838, 23.7275, 13.5], ["Θεσσαλονίκη", "Thessaloniki", 40.6401, 22.9444, 13.5],
+  ["Πάτρα", "Patras", 38.2466, 21.7346, 13.5], ["Ηράκλειο", "Heraklion", 35.3387, 25.1442, 13.5],
+  ["Χανιά", "Chania", 35.5138, 24.0180, 14], ["Ρέθυμνο", "Rethymno", 35.3660, 24.4790, 14],
+  ["Άγιος Νικόλαος", "Agios Nikolaos", 35.1900, 25.7150, 14], ["Ρόδος", "Rhodes", 36.4349, 28.2176, 13.5],
+  ["Κως", "Kos", 36.8930, 27.2877, 14], ["Κέρκυρα", "Corfu", 39.6243, 19.9217, 13.5],
+  ["Ζάκυνθος", "Zakynthos", 37.7870, 20.8990, 14], ["Αργοστόλι (Κεφαλονιά)", "Argostoli (Kefalonia)", 38.1753, 20.4890, 14],
+  ["Λευκάδα", "Lefkada", 38.8300, 20.7000, 14], ["Σαντορίνη (Φηρά)", "Santorini (Fira)", 36.4166, 25.4320, 14],
+  ["Μύκονος", "Mykonos", 37.4467, 25.3289, 14], ["Νάξος", "Naxos", 37.1036, 25.3763, 14],
+  ["Πάρος (Παροικιά)", "Paros (Parikia)", 37.0850, 25.1500, 14], ["Σύρος (Ερμούπολη)", "Syros (Ermoupoli)", 37.4440, 24.9420, 14],
+  ["Μήλος (Αδάμαντας)", "Milos (Adamas)", 36.7240, 24.4410, 14], ["Λέσβος (Μυτιλήνη)", "Lesvos (Mytilene)", 39.1100, 26.5547, 14],
+  ["Χίος", "Chios", 38.3700, 26.1350, 14], ["Σάμος (Βαθύ)", "Samos (Vathy)", 37.7550, 26.9770, 14],
+  ["Θάσος", "Thasos", 40.7780, 24.7050, 14], ["Σκιάθος", "Skiathos", 39.1620, 23.4900, 14],
+  ["Βόλος", "Volos", 39.3610, 22.9420, 13.5], ["Πήλιο (Πορταριά)", "Pelion (Portaria)", 39.3860, 22.9990, 13],
+  ["Λάρισα", "Larissa", 39.6390, 22.4191, 13.5], ["Ιωάννινα", "Ioannina", 39.6650, 20.8537, 13.5],
+  ["Μετέωρα (Καλαμπάκα)", "Meteora (Kalambaka)", 39.7217, 21.6306, 13], ["Όλυμπος (Λιτόχωρο)", "Mount Olympus (Litochoro)", 40.1040, 22.5010, 13],
+  ["Δελφοί", "Delphi", 38.4824, 22.5010, 14], ["Ναύπλιο", "Nafplio", 37.5673, 22.8078, 14],
+  ["Κόρινθος", "Corinth", 37.9400, 22.9300, 13.5], ["Ολυμπία", "Olympia", 37.6383, 21.6300, 14],
+  ["Σπάρτη", "Sparta", 37.0740, 22.4300, 14], ["Καλαμάτα", "Kalamata", 37.0389, 22.1142, 13.5],
+  ["Καβάλα", "Kavala", 40.9397, 24.4019, 13.5], ["Αλεξανδρούπολη", "Alexandroupoli", 40.8457, 25.8744, 13.5],
+];
+const inGreece = ([lon, lat]) => lat > 34.5 && lat < 42 && lon > 19.2 && lon < 29.8;
+
+// ---- water groups: "drink" = OSM says drinking water; "other" = springs/taps with no drinkability claim
+const GROUPS = { drink: false, other: true };            // value = shown as a hollow ring
+const active = new Set(Object.keys(GROUPS));
+const gradeOf = p => (p.kind === "fountain" || p.drinking_water === "yes") ? "drink" : "other";
+let data = null, userPos = null, firstFix = true;
 
 const $ = id => document.getElementById(id);
 const sheet = $("sheet");
 function setSheet(open) { sheet.classList.toggle("open", open); $("chev").textContent = open ? "▼" : "▲"; }
+let toastTimer;
+function toast(msg) { const el = $("toast"); el.textContent = msg; el.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("show"), 4500); }
+
+let basemap = "standard";
+try { basemap = localStorage.getItem("basemap") || "standard"; } catch (e) {}
+if (!["standard", "terrain", "satellite"].includes(basemap)) basemap = "standard";
+const darkUI = matchMedia("(prefers-color-scheme: dark)").matches;
+const styleUrl = () => "https://tiles.openfreemap.org/styles/" + ((darkUI || basemap === "satellite") ? "dark" : "liberty");
 
 const map = new maplibregl.Map({
   container: "map",
-  style: "https://tiles.openfreemap.org/styles/" + (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "liberty"),
+  style: styleUrl(),
   center: [23.73, 37.98], zoom: 11, hash: true, attributionControl: { compact: true },
 });
+const geolocate = new maplibregl.GeolocateControl({
+  positionOptions: { enableHighAccuracy: true, timeout: 15000 },
+  trackUserLocation: true, showUserHeading: true, fitBoundsOptions: { maxZoom: 15 },
+});
+map.addControl(geolocate, "bottom-right");
 map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
 new ResizeObserver(() => map.resize()).observe($("map"));
+
+geolocate.on("geolocate", e => {
+  const p = [e.coords.longitude, e.coords.latitude];
+  if (!inGreece(p)) {
+    userPos = null;
+    if (firstFix) { toast(t("outside")); map.flyTo({ center: [23.7275, 37.9838], zoom: 12 }); }
+    firstFix = false; renderList(); return;
+  }
+  userPos = p; renderList();
+  if (firstFix) setSheet(true);
+  firstFix = false;
+});
+geolocate.on("error", () => toast(t("locFail")));
 
 function haversine(a, b) {
   const R = 6371000, r = Math.PI / 180;
@@ -199,56 +343,48 @@ function haversine(a, b) {
 const fmtDist = d => d < 1000 ? Math.round(d / 10) * 10 + " " + t("m") : (d / 1000).toFixed(d < 10000 ? 1 : 0) + " " + t("km");
 const nameOf = p => p["name:" + lang] || p.name || p["name:el"] || p["name:en"] || "";
 const labelOf = p => nameOf(p) ? `${t(p.kind)} · ${nameOf(p)}` : t(p.kind);
-const visible = f => active.has(f.properties.kind);
+const visible = f => active.has(f.properties.grade);
+const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
 function applyFilter() {
-  if (!map.getLayer("points")) return;
-  const f = ["in", ["get", "kind"], ["literal", [...active]]];
-  map.setFilter("points", ["all", ["!", ["has", "point_count"]], f]);
-  // Clusters are computed from the source, so rebuild the source with filtered data.
+  if (!map.getSource("water")) return;
+  // Clusters are computed from the source, so rebuild the source with the filtered data.
   map.getSource("water").setData({ type: "FeatureCollection", features: data.features.filter(visible) });
   if (route) computeHits();
   renderList();
   $("count").textContent = t("points")(data.features.filter(visible).length);
+  updateNudge();
 }
 
 function renderChips() {
   const box = $("chips"); box.textContent = "";
-  for (const k of Object.keys(KINDS)) {
+  for (const [g, ring] of Object.entries(GROUPS)) {
     const b = document.createElement("button");
-    b.className = "chip"; b.setAttribute("aria-pressed", active.has(k));
-    const i = document.createElement("i"); i.style.background = KINDS[k];
-    b.append(i, document.createTextNode(t(k)));
-    b.onclick = () => { active.has(k) ? active.delete(k) : active.add(k); b.setAttribute("aria-pressed", active.has(k)); applyFilter(); };
+    b.className = "chip"; b.setAttribute("aria-pressed", active.has(g));
+    const i = document.createElement("i"); if (ring) i.className = "ring";
+    b.append(i, document.createTextNode(t(g === "drink" ? "gDrink" : "gOther")));
+    b.onclick = () => { active.has(g) ? active.delete(g) : active.add(g); b.setAttribute("aria-pressed", active.has(g)); applyFilter(); };
     box.append(b);
   }
-  for (const [key, center] of [["athens", [23.7275, 37.9838]], ["thess", [22.9444, 40.6401]]]) {
-    const b = document.createElement("button");
-    b.className = "chip city"; b.textContent = t(key);
-    b.onclick = () => map.flyTo({ center, zoom: 13.5 });
-    box.append(b);
-  }
-  const g = document.createElement("button");
-  g.className = "chip city"; g.textContent = "\u2934 " + t("route");
-  g.onclick = () => $("gpxIn").click();
-  box.append(g);
 }
+
+function dotFor(p) { const d = document.createElement("span"); d.className = "dot" + (p.grade === "other" ? " ring" : ""); return d; }
 
 function renderList() {
   const ul = $("list"); ul.textContent = "";
   $("rctl").hidden = !route;
   if (route) return renderRouteList(ul);
   $("sheetTitle").textContent = t("nearest");
-  if (!userPos) { const p = document.createElement("p"); p.className = "empty"; p.textContent = t("nearestNone"); ul.append(p); return; }
+  const say = txt => { const p = document.createElement("p"); p.className = "empty"; p.textContent = txt; ul.append(p); };
+  if (!data || !userPos) return say(t("nearestNone"));
   const near = data.features.filter(visible)
     .map(f => ({ f, d: haversine(userPos, f.geometry.coordinates) })).sort((a, b) => a.d - b.d).slice(0, 12);
-  if (!near.length) { const p = document.createElement("p"); p.className = "empty"; p.textContent = t("noResults"); ul.append(p); return; }
+  if (!near.length) return say(t("noResults"));
   for (const { f, d } of near) {
     const li = document.createElement("li"), b = document.createElement("button");
-    const dot = document.createElement("span"); dot.className = "dot"; dot.style.background = KINDS[f.properties.kind];
     const nm = document.createElement("span"); nm.textContent = labelOf(f.properties);
     const ds = document.createElement("span"); ds.className = "dist"; ds.textContent = fmtDist(d);
-    b.append(dot, nm, ds); b.onclick = () => { focusOn(f); setSheet(false); };
+    b.append(dotFor(f.properties), nm, ds); b.onclick = () => { focusOn(f); setSheet(false); };
     li.append(b); ul.append(li);
   }
 }
@@ -259,6 +395,8 @@ function popupNode(f) {
   const h = document.createElement("h3"); h.textContent = labelOf(p); div.append(h);
   const line = txt => { const e = document.createElement("p"); e.textContent = txt; div.append(e); };
   line(`${t("drinkable")}: ${p.drinking_water === "yes" ? t("drinkableYes") : p.kind === "fountain" ? t("drinkableListed") : t("drinkableUnknown")}`);
+  if (userPos) line(`${fmtDist(haversine(userPos, [lon, lat]))} ${t("away")}`);
+  if (p.bottle === "yes") line(t("bottle"));
   if (p.seasonal) line(`${t("seasonal")}: ${p.seasonal}`);
   if (p.fee) line(`${t("fee")}: ${p.fee}`);
   if (p.opening_hours) line(`${t("hours")}: ${p.opening_hours}`);
@@ -268,12 +406,12 @@ function popupNode(f) {
   const mk = (href, txt) => { const a = document.createElement("a"); a.href = href; a.target = "_blank"; a.rel = "noopener"; a.textContent = txt; return a; };
   const kind = p.osm.startsWith("n") ? "node" : "way";
   links.append(mk(`https://www.openstreetmap.org/${kind}/${p.osm.slice(1)}`, t("viewOsm")),
-               mk(`https://www.openstreetmap.org/note/new#map=19/${lat}/${lon}`, t("report")));
+               mk(`https://www.openstreetmap.org/note/new#map=19/${lat}/${lon}`, t("report")),
+               mk(`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`, t("streetView")));
   div.append(links);
   const dir = document.createElement("a"); dir.className = "dir"; dir.target = "_blank"; dir.rel = "noopener";
   dir.href = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&travelmode=walking`;
   dir.textContent = "→ " + t("directions"); div.append(dir);
-  links.append(mk(`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`, t("streetView")));
   return div;
 }
 
@@ -282,20 +420,7 @@ function focusOn(f) {
   new maplibregl.Popup({ offset: 12 }).setLngLat(f.geometry.coordinates).setDOMContent(popupNode(f)).addTo(map);
 }
 
-function locate() {
-  const btn = $("locate"); btn.textContent = t("locating");
-  navigator.geolocation.getCurrentPosition(pos => {
-    btn.textContent = t("near");
-    userPos = [pos.coords.longitude, pos.coords.latitude];
-    if (marker) marker.remove();
-    const el = document.createElement("div");
-    el.style.cssText = "width:16px;height:16px;border-radius:50%;background:#e5484d;border:3px solid #fff;box-shadow:0 0 0 2px rgba(229,72,77,.4)";
-    marker = new maplibregl.Marker({ element: el }).setLngLat(userPos).addTo(map);
-    map.flyTo({ center: userPos, zoom: 15 });
-    renderList(); setSheet(true);
-  }, () => { btn.textContent = t("near"); alert(t("locFail")); }, { enableHighAccuracy: true, timeout: 10000 });
-}
-
+// ---- "missing a fountain?" and the low-coverage nudge
 function updateMissingLink() {
   const c = map.getCenter(), z = Math.max(17, Math.round(map.getZoom()));
   $("missingGo").href = `https://www.openstreetmap.org/note/new#map=${z}/${c.lat.toFixed(5)}/${c.lng.toFixed(5)}`;
@@ -314,6 +439,40 @@ $("missing").onclick = openMissing;
 $("nudgeBtn").onclick = openMissing;
 $("mCancel").onclick = () => $("mdlg").close();
 $("missingGo").addEventListener("click", () => $("mdlg").close());
+
+// ---- places
+let placeCounts = [];
+function countPlaces() {
+  placeCounts = PLACES.map(([, , lat, lon]) => data.features.reduce((n, f) => n + (haversine([lon, lat], f.geometry.coordinates) <= 4000 ? 1 : 0), 0));
+}
+function renderPlaces() {
+  const q = norm($("pq").value.trim()), ul = $("plist"); ul.textContent = "";
+  PLACES.forEach(([el, en, lat, lon, zoom], i) => {
+    if (q && !norm(el).includes(q) && !norm(en).includes(q)) return;
+    const li = document.createElement("li"), b = document.createElement("button");
+    const nm = document.createElement("span"); nm.textContent = lang === "el" ? el : en;
+    const n = document.createElement("span"); n.className = "n"; if (data) n.textContent = t("pts")(placeCounts[i] ?? 0);
+    b.append(nm, n);
+    b.onclick = () => { $("pdlg").close(); map.flyTo({ center: [lon, lat], zoom }); };
+    li.append(b); ul.append(li);
+  });
+}
+function openPlaces() { $("pq").value = ""; renderPlaces(); $("pdlg").showModal(); }
+$("pq").oninput = renderPlaces;
+$("pClose").onclick = () => $("pdlg").close();
+
+// ---- menu
+function setMenu(open) { $("menu").hidden = !open; $("menuBtn").setAttribute("aria-expanded", open); }
+$("menuBtn").onclick = e => { e.stopPropagation(); setMenu($("menu").hidden); };
+document.addEventListener("click", e => { if (!$("menu").hidden && !$("menu").contains(e.target)) setMenu(false); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") setMenu(false); });
+$("mPlaces").onclick = () => { setMenu(false); openPlaces(); };
+$("mMap").onclick = () => { setMenu(false); document.querySelector(`input[name="bm"][value="${basemap}"]`).checked = true; $("bdlg").showModal(); };
+$("mRoute").onclick = () => { setMenu(false); $("gpxIn").click(); };
+$("mAbout").onclick = () => { setMenu(false); $("dlg").showModal(); };
+$("mSupport").onclick = () => setMenu(false);
+$("closeDlg").onclick = () => $("dlg").close();
+$("grab").onclick = () => setSheet(!sheet.classList.contains("open"));
 
 // ---- GPX route: draw a route and list the water points along it (all client-side)
 let route = null, routeMax = 300, routeHits = [];
@@ -384,11 +543,10 @@ function renderRouteList(ul) {
   if (!routeHits.length) { const p = document.createElement("p"); p.className = "empty"; p.textContent = t("routeNone"); ul.append(p); return; }
   for (const { f, d, along } of routeHits) {
     const li = document.createElement("li"), b = document.createElement("button");
-    const dot = document.createElement("span"); dot.className = "dot"; dot.style.background = KINDS[f.properties.kind];
     const nm = document.createElement("span"); nm.textContent = labelOf(f.properties);
     const ds = document.createElement("span"); ds.className = "dist";
     ds.textContent = `${(along / 1000).toFixed(1)} ${t("km")} · ${fmtDist(d)}`;
-    b.append(dot, nm, ds); b.onclick = () => { focusOn(f); setSheet(false); };
+    b.append(dotFor(f.properties), nm, ds); b.onclick = () => { focusOn(f); setSheet(false); };
     li.append(b); ul.append(li);
   }
 }
@@ -405,7 +563,8 @@ function setRouteOnMap() {
 
 function loadGpxText(text) {
   const full = parseGpx(text);
-  if (!full) { alert(t("routeErr")); return; }
+  if (!full) { toast(t("routeErr")); return; }
+  if (!data) return;
   route = buildRoute(full);
   setRouteOnMap(); computeHits(); renderList(); setSheet(true);
   const b = route.coords.reduce((bb, c) => bb.extend(c), new maplibregl.LngLatBounds(route.coords[0], route.coords[0]));
@@ -426,26 +585,72 @@ addEventListener("dragover", e => { e.preventDefault(); document.body.classList.
 addEventListener("dragleave", () => document.body.classList.remove("drag"));
 addEventListener("drop", e => { e.preventDefault(); document.body.classList.remove("drag"); handleGpxFile(e.dataTransfer.files[0]); });
 
+// ---- language
 function applyLang() {
   document.documentElement.lang = lang;
   document.querySelectorAll("[data-i]").forEach(e => e.textContent = t(e.dataset.i));
+  $("pq").placeholder = t("placesSearch");
   $("lang").textContent = lang === "el" ? "EN" : "ΕΛ";
   if (data) $("updated").textContent = `${t("updated")} OpenStreetMap: ${data.generated || "?"}`;
-  updateNudge();
-  renderChips(); if (data) { renderList(); $("count").textContent = t("points")(data.features.filter(visible).length); }
+  try { if (map.getLayer("place_town")) setLabelLanguage(); } catch (e) {}
+  renderChips(); renderPlaces(); updateNudge();
+  if (data) { renderList(); $("count").textContent = t("points")(data.features.filter(visible).length); }
+}
+$("lang").onclick = () => { lang = lang === "el" ? "en" : "el"; try { localStorage.setItem("lang", lang); } catch (e) {} applyLang(); };
+if (DONATE_URL) { $("donate").hidden = false; $("donateLink").href = DONATE_URL; $("mSupport").hidden = false; $("mSupport").href = DONATE_URL; }
+$("stats").hidden = false;
+applyLang();
+
+// ---- keep the base map neutral: no border lines, labels in the app language
+function setLabelLanguage() {
+  const field = lang === "el" ? ["coalesce", ["get", "name:el"], ["get", "name"]]
+                              : ["coalesce", ["get", "name_en"], ["get", "name:latin"], ["get", "name"]];
+  for (const l of map.getStyle().layers) {
+    if (l.type !== "symbol") continue;
+    const tf = map.getLayoutProperty(l.id, "text-field");
+    if (tf && JSON.stringify(tf).includes("name")) map.setLayoutProperty(l.id, "text-field", field);
+  }
+}
+function tidyBaseStyle() {
+  for (const l of map.getStyle().layers) {
+    if (/bound|border|disput|marit/i.test(l.id)) map.setLayoutProperty(l.id, "visibility", "none");
+  }
+  setLabelLanguage();
 }
 
-$("lang").onclick = () => { lang = lang === "el" ? "en" : "el"; try { localStorage.setItem("lang", lang); } catch (e) {} applyLang(); };
-$("locate").onclick = locate;
-$("info").onclick = () => $("dlg").showModal();
-$("closeDlg").onclick = () => $("dlg").close();
-$("grab").onclick = () => setSheet(!sheet.classList.contains("open"));
+// ---- base map type (standard / terrain / satellite)
+function applyBasemapExtras() {
+  const layers = map.getStyle().layers;
+  const firstLine = (layers.find(l => l.type === "line" || l.type === "symbol") || {}).id;
+  if (basemap === "terrain") {
+    map.addSource("dem", { type: "raster-dem", encoding: "terrarium", tileSize: 256, maxzoom: 13,
+      tiles: ["https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"],
+      attribution: "Terrain: Mapzen / AWS Terrain Tiles (SRTM, USGS and others)" });
+    map.addLayer({ id: "hillshade", type: "hillshade", source: "dem", paint: {
+      "hillshade-exaggeration": 0.55,
+      "hillshade-shadow-color": darkUI ? "#000000" : "#39463c",
+      "hillshade-highlight-color": darkUI ? "#5c6b78" : "#ffffff",
+      "hillshade-accent-color": darkUI ? "#2a3642" : "#6b7c6f" } }, firstLine);
+  } else if (basemap === "satellite") {
+    for (const l of layers) if (["fill", "background", "fill-extrusion"].includes(l.type)) map.setLayoutProperty(l.id, "visibility", "none");
+    map.addSource("sat", { type: "raster", tileSize: 256, maxzoom: 13,
+      tiles: ["https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless_3857/default/g/{z}/{y}/{x}.jpg"],
+      attribution: "Sentinel-2 cloudless by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016)" });
+    map.addLayer({ id: "sat", type: "raster", source: "sat" }, firstLine);
+  }
+}
+function setBasemap(name) {
+  if (name === basemap) return;
+  basemap = name;
+  try { localStorage.setItem("basemap", name); } catch (e) {}
+  map.setStyle(styleUrl(), { diff: false });   // full reload, so "style.load" fires and redraws everything below
+}
+document.querySelectorAll('input[name="bm"]').forEach(r => r.onchange = () => { setBasemap(r.value); $("bdlg").close(); });
+$("bClose").onclick = () => $("bdlg").close();
 
-// Fetch the data right away, in parallel with the base map, and draw it as soon as the map style is ready
-// (not after every tile has loaded), so slow map tiles never hold the fountains back.
-const dataReady = fetch("water.geojson").then(r => r.json());
-map.on("style.load", async () => {
-  try { data = await dataReady; } catch (e) { $("count").textContent = "\u26A0"; return; }
+// ---- data layers (re-added every time the base style loads)
+function installData() {
+  if (map.getSource("water")) return;
   map.addSource("water", { type: "geojson", data, cluster: true, clusterRadius: 44, clusterMaxZoom: 14 });
   map.addLayer({ id: "clusters", type: "circle", source: "water", filter: ["has", "point_count"],
     paint: { "circle-color": "#1478d4", "circle-opacity": .85, "circle-stroke-color": "#fff", "circle-stroke-width": 2,
@@ -455,22 +660,40 @@ map.on("style.load", async () => {
     paint: { "text-color": "#fff" } });
   map.addLayer({ id: "points", type: "circle", source: "water", filter: ["!", ["has", "point_count"]],
     paint: { "circle-radius": ["interpolate", ["linear"], ["zoom"], 8, 4, 16, 9],
-             "circle-color": ["match", ["get", "kind"], "tap", KINDS.tap, "spring", KINDS.spring, KINDS.fountain],
-             "circle-stroke-color": "#fff", "circle-stroke-width": 2 } });
-  map.on("click", "clusters", e => {
-    const f = e.features[0];
-    map.getSource("water").getClusterExpansionZoom(f.properties.cluster_id).then(z => map.easeTo({ center: f.geometry.coordinates, zoom: z + .5 }));
-  });
-  map.on("click", "points", e => focusOn(e.features[0]));
-  for (const l of ["clusters", "points"]) {
-    map.on("mouseenter", l, () => map.getCanvas().style.cursor = "pointer");
-    map.on("mouseleave", l, () => map.getCanvas().style.cursor = "");
-  }
-  applyFilter(); $("updated").textContent = `${t("updated")} OpenStreetMap: ${data.generated || "?"}`; updateNudge();
+             "circle-color": ["match", ["get", "grade"], "other", "#ffffff", "#1478d4"],
+             "circle-stroke-color": ["match", ["get", "grade"], "other", "#0e9384", "#ffffff"],
+             "circle-stroke-width": ["match", ["get", "grade"], "other", 3, 2] } });
+}
+map.on("click", "clusters", e => {
+  const f = e.features[0];
+  map.getSource("water").getClusterExpansionZoom(f.properties.cluster_id).then(z => map.easeTo({ center: f.geometry.coordinates, zoom: z + .5 }));
 });
-if (DONATE_URL) { $("donate").hidden = false; $("donateLink").href = DONATE_URL; }
-$("stats").hidden = false;
-applyLang();
+map.on("click", "points", e => focusOn(e.features[0]));
+for (const l of ["clusters", "points"]) {
+  map.on("mouseenter", l, () => map.getCanvas().style.cursor = "pointer");
+  map.on("mouseleave", l, () => map.getCanvas().style.cursor = "");
+}
+
+// ---- data: fetched in parallel with the base map and drawn as soon as the style is ready
+const dataReady = fetch("water.geojson").then(r => r.json());
+let firstStyle = true;
+map.on("style.load", async () => {
+  try { data = data || await dataReady; } catch (e) { $("count").textContent = "⚠"; return; }
+  if (firstStyle) { for (const f of data.features) f.properties.grade = gradeOf(f.properties); countPlaces(); }
+  tidyBaseStyle();
+  applyBasemapExtras();
+  installData();
+  if (route) { setRouteOnMap(); computeHits(); }
+  applyFilter();
+  if (firstStyle) {
+    applyLang();
+    // If location permission was already granted and this isn't a shared link, centre on the user right away.
+    if (!startedWithHash && navigator.permissions) {
+      navigator.permissions.query({ name: "geolocation" }).then(r => { if (r.state === "granted") geolocate.trigger(); }).catch(() => {});
+    }
+  }
+  firstStyle = false;
+});
 </script>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "2c68d58ae22d42a796ba8ac800439153"}'></script><!-- End Cloudflare Web Analytics -->
 </body>

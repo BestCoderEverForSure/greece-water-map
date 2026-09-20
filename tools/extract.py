@@ -16,7 +16,7 @@ KEEP_TAGS = ("name", "name:el", "name:en", "drinking_water", "bottle", "fee",
 
 def classify(tags):
     """Return a coarse kind for a feature, or None if it isn't drinking water."""
-    if tags.get("drinking_water") == "no":
+    if tags.get("drinking_water") == "no" or tags.get("access") == "private":
         return None
     if tags.get("amenity") == "drinking_water":
         return "fountain"
@@ -26,6 +26,8 @@ def classify(tags):
         return "spring"
     if tags.get("amenity") == "fountain" and tags.get("drinking_water") == "yes":
         return "fountain"
+    if tags.get("drinking_water") == "yes":       # camp sites, wells, water points, toilets, ...
+        return "point"
     return None
 
 
@@ -33,7 +35,7 @@ def main(src, dst):
     feats = []
     fp = (osmium.FileProcessor(src, osmium.osm.NODE | osmium.osm.WAY)
           .with_locations()
-          .with_filter(osmium.filter.KeyFilter("amenity", "man_made", "natural")))
+          .with_filter(osmium.filter.KeyFilter("amenity", "man_made", "natural", "tourism", "drinking_water")))
     for o in fp:
         kind = classify(o.tags)
         if not kind:
