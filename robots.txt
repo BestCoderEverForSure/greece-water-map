@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://bestcodereverforsure.github.io/greece-water-map/sitemap.xml

@@ -141,6 +141,7 @@
 <div class="menu" id="menu" hidden>
   <button id="mPlaces" data-i="menuPlaces"></button>
   <button id="mMap" data-i="menuMap"></button>
+  <a id="mAreas" href="vryses/" data-i="menuAreas"></a>
   <button id="mRoute" data-i="route"></button>
   <button id="mTheme"></button>
   <button id="mShare" data-i="menuShare"></button>
@@ -222,7 +223,7 @@ const T = {
     title: "Νεράκι", ok: "ΟΚ", cancel: "Άκυρο",
     gDrink: "Πόσιμο νερό", gOther: "Πηγές & κάνουλες",
     fountain: "Βρύση", tap: "Κάνουλα", spring: "Πηγή", point: "Σημείο νερού", bottle: "Γέμισμα μπουκαλιού", free: "Δωρεάν",
-    menuPlaces: "Μέρη", menuMap: "Τύπος χάρτη", menuShare: "Κοινοποίηση", copied: "Ο σύνδεσμος αντιγράφηκε", theme: "Θέμα", theme_auto: "Αυτόματο", theme_light: "Φωτεινό", theme_dark: "Σκούρο", mapStandard: "Κανονικός", mapTerrain: "Ανάγλυφο", mapTerrainNote: "Σκιασμένο ανάγλυφο, καλό για βουνά και πεζοπορία.", mapSat: "Δορυφόρος", mapSatNote: "Sentinel-2, 2016, περίπου 10 μ. ανάλυση. Καλός για βουνά και βλάστηση, όχι για λεπτομέρειες δρόμων.", route: "Διαδρομή GPX", menuAbout: "Σχετικά", menuSupport: "Στήριξη",
+    menuPlaces: "Μέρη", menuMap: "Τύπος χάρτη", menuAreas: "Λίστα ανά περιοχή", edit: "Επεξεργασία", menuShare: "Κοινοποίηση", copied: "Ο σύνδεσμος αντιγράφηκε", theme: "Θέμα", theme_auto: "Αυτόματο", theme_light: "Φωτεινό", theme_dark: "Σκούρο", mapStandard: "Κανονικός", mapTerrain: "Ανάγλυφο", mapTerrainNote: "Σκιασμένο ανάγλυφο, καλό για βουνά και πεζοπορία.", mapSat: "Δορυφόρος", mapSatNote: "Sentinel-2, 2016, περίπου 10 μ. ανάλυση. Καλός για βουνά και βλάστηση, όχι για λεπτομέρειες δρόμων.", route: "Διαδρομή GPX", menuAbout: "Σχετικά", menuSupport: "Στήριξη",
     placesTitle: "Μετάβαση σε μέρος", placesSearch: "Αναζήτηση…", pts: n => `${n} σημεία`,
     legendDrink: "Πόσιμο νερό: σημεία που το OpenStreetMap δηλώνει ως πόσιμο νερό.",
     legendOther: "Πηγές και κάνουλες: το OpenStreetMap δεν λέει αν το νερό είναι πόσιμο. Έλεγξε πριν πιεις.",
@@ -251,7 +252,7 @@ const T = {
     title: "Νεράκι", ok: "OK", cancel: "Cancel",
     gDrink: "Drinking water", gOther: "Springs & taps",
     fountain: "Fountain", tap: "Tap", spring: "Spring", point: "Water point", bottle: "Bottle refill", free: "Free",
-    menuPlaces: "Places", menuMap: "Map type", menuShare: "Share", copied: "Link copied", theme: "Theme", theme_auto: "Auto", theme_light: "Light", theme_dark: "Dark", mapStandard: "Standard", mapTerrain: "Terrain", mapTerrainNote: "Shaded relief, good for mountains and hiking.", mapSat: "Satellite", mapSatNote: "Sentinel-2, 2016, about 10 m resolution. Good for mountains and vegetation, not for street details.", route: "Route (GPX)", menuAbout: "About", menuSupport: "Support",
+    menuPlaces: "Places", menuMap: "Map type", menuAreas: "Browse by area", edit: "Edit", menuShare: "Share", copied: "Link copied", theme: "Theme", theme_auto: "Auto", theme_light: "Light", theme_dark: "Dark", mapStandard: "Standard", mapTerrain: "Terrain", mapTerrainNote: "Shaded relief, good for mountains and hiking.", mapSat: "Satellite", mapSatNote: "Sentinel-2, 2016, about 10 m resolution. Good for mountains and vegetation, not for street details.", route: "Route (GPX)", menuAbout: "About", menuSupport: "Support",
     placesTitle: "Jump to a place", placesSearch: "Search…", pts: n => `${n} points`,
     legendDrink: "Drinking water: points OpenStreetMap lists as drinking water.",
     legendOther: "Springs and taps: OpenStreetMap doesn't say if the water is drinkable. Check before you drink.",
@@ -441,6 +442,7 @@ function popupNode(f) {
   const mk = (href, txt) => { const a = document.createElement("a"); a.href = href; a.target = "_blank"; a.rel = "noopener"; a.textContent = txt; return a; };
   const kind = p.osm.startsWith("n") ? "node" : "way";
   links.append(mk(`https://www.openstreetmap.org/${kind}/${p.osm.slice(1)}`, t("viewOsm")),
+               mk(`https://www.openstreetmap.org/edit?${kind}=${p.osm.slice(1)}`, t("edit")),
                mk(`https://www.openstreetmap.org/note/new#map=19/${lat}/${lon}`, t("report")),
                mk(`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`, t("streetView")));
   div.append(links);
