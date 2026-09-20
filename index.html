@@ -5,18 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Νεράκι · Πόσιμο νερό στην Ελλάδα · Drinking water in Greece</title>
 <meta name="description" content="Νεράκι: χάρτης με βρύσες και πηγές πόσιμου νερού στην Ελλάδα. Neraki: a free map of drinking fountains, taps and springs in Greece.">
-<meta name="theme-color" content="#0e6ba8">
+<meta name="theme-color" content="#0d5eaf">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Νεράκι">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://bestcodereverforsure.github.io/greece-water-map/">
 <meta property="og:title" content="Νεράκι · Πόσιμο νερό στην Ελλάδα · Drinking water in Greece">
 <meta property="og:description" content="Χάρτης με βρύσες, κάνουλες και πηγές. Neraki: a free map of drinking fountains, taps and springs in Greece.">
 <meta name="twitter:card" content="summary">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 30%27%3E%3Cpath d=%27M12 2C8 9 3 13.5 3 19A9 9 0 0 0 21 19C21 13.5 16 9 12 2Z%27 fill=%27none%27 stroke=%27%230e6ba8%27 stroke-width=%272.4%27/%3E%3Ccircle cx=%2712%27 cy=%2719%27 r=%273%27 fill=%27%230e6ba8%27/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 30%27%3E%3Cpath d=%27M12 2C8 9 3 13.5 3 19A9 9 0 0 0 21 19C21 13.5 16 9 12 2Z%27 fill=%27%230d5eaf%27/%3E%3Ccircle cx=%2712%27 cy=%2719%27 r=%276.3%27 fill=%27%23ffffff%27/%3E%3Ccircle cx=%2712%27 cy=%2719%27 r=%274.5%27 fill=%27%235aa9e6%27/%3E%3Ccircle cx=%2712%27 cy=%2719%27 r=%272.4%27 fill=%27%230b2d5b%27/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <style>
   :root {
     --bg: #f6f4ef; --fg: #14232b; --muted: #5d6a70; --line: #e0dcd2; --card: #fdfcf9;
-    --drink: #0e6ba8; --other: #0e9384; --accent: #0e6ba8;
+    --drink: #0d5eaf; --other: #0e9384; --accent: #0d5eaf;
     --shadow: 0 2px 10px rgba(10, 30, 50, .18);
   }
   :root[data-theme="dark"] { --bg: #0f1a24; --fg: #e8eef3; --muted: #9db0c1; --line: #263644; --card: #16232f; --accent: #3d9bd8; --shadow: 0 2px 12px rgba(0,0,0,.5); }
@@ -130,7 +135,7 @@
 
 <div class="top">
   <div class="bar">
-    <div class="title"><span class="logo"><svg class="drop" viewBox="0 0 24 30" width="17" height="21" aria-hidden="true"><path d="M12 2C8 9 3 13.5 3 19A9 9 0 0 0 21 19C21 13.5 16 9 12 2Z" fill="none" stroke="#0e6ba8" stroke-width="2.6"/><circle cx="12" cy="19" r="3.2" fill="#0e6ba8"/></svg></span><span data-i="title"></span><small id="count">…</small></div>
+    <div class="title"><span class="logo"><svg class="drop" viewBox="0 0 24 30" width="17" height="21" aria-hidden="true"><path d="M12 2C8 9 3 13.5 3 19A9 9 0 0 0 21 19C21 13.5 16 9 12 2Z" fill="#0d5eaf"/><circle cx="12" cy="19" r="6.3" fill="#ffffff"/><circle cx="12" cy="19" r="4.5" fill="#5aa9e6"/><circle cx="12" cy="19" r="2.4" fill="#0b2d5b"/></svg></span><span data-i="title"></span><small id="count">…</small></div>
     <button class="icon" id="lang">EN</button>
     <button class="icon" id="menuBtn" aria-label="Menu" aria-expanded="false" aria-controls="menu"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
   </div>
@@ -142,6 +147,7 @@
   <button id="mPlaces" data-i="menuPlaces"></button>
   <button id="mMap" data-i="menuMap"></button>
   <a id="mAreas" href="vryses/" data-i="menuAreas"></a>
+  <button id="mInstall" hidden data-i="menuInstall"></button>
   <button id="mRoute" data-i="route"></button>
   <button id="mTheme"></button>
   <button id="mShare" data-i="menuShare"></button>
@@ -197,6 +203,7 @@
   <p data-i="aboutSafety"></p>
   <p data-i="aboutMissing"></p>
   <p data-i="privacy"></p>
+  <p data-i="iosTip"></p>
   <p id="updated"></p>
   <p id="donate" hidden><a id="donateLink" target="_blank" rel="noopener" data-i="donate"></a></p>
   <p id="stats" hidden data-i="statsNote"></p>
@@ -223,7 +230,7 @@ const T = {
     title: "Νεράκι", ok: "ΟΚ", cancel: "Άκυρο",
     gDrink: "Πόσιμο νερό", gOther: "Πηγές & κάνουλες",
     fountain: "Βρύση", tap: "Κάνουλα", spring: "Πηγή", point: "Σημείο νερού", bottle: "Γέμισμα μπουκαλιού", free: "Δωρεάν",
-    menuPlaces: "Μέρη", menuMap: "Τύπος χάρτη", menuAreas: "Λίστα ανά περιοχή", edit: "Επεξεργασία", menuShare: "Κοινοποίηση", copied: "Ο σύνδεσμος αντιγράφηκε", theme: "Θέμα", theme_auto: "Αυτόματο", theme_light: "Φωτεινό", theme_dark: "Σκούρο", mapStandard: "Κανονικός", mapTerrain: "Ανάγλυφο", mapTerrainNote: "Σκιασμένο ανάγλυφο, καλό για βουνά και πεζοπορία.", mapSat: "Δορυφόρος", mapSatNote: "Sentinel-2, 2016, περίπου 10 μ. ανάλυση. Καλός για βουνά και βλάστηση, όχι για λεπτομέρειες δρόμων.", route: "Διαδρομή GPX", menuAbout: "Σχετικά", menuSupport: "Στήριξη",
+    menuPlaces: "Μέρη", menuMap: "Τύπος χάρτη", menuAreas: "Λίστα ανά περιοχή", menuInstall: "Εγκατάσταση εφαρμογής", offline: "Χωρίς σύνδεση. Δείχνουμε τα δεδομένα που έχουν αποθηκευτεί.", online: "Ξανά online.", iosTip: "Στο iPhone: Κοινοποίηση, μετά «Προσθήκη στην αρχική οθόνη».", edit: "Επεξεργασία", menuShare: "Κοινοποίηση", copied: "Ο σύνδεσμος αντιγράφηκε", theme: "Θέμα", theme_auto: "Αυτόματο", theme_light: "Φωτεινό", theme_dark: "Σκούρο", mapStandard: "Κανονικός", mapTerrain: "Ανάγλυφο", mapTerrainNote: "Σκιασμένο ανάγλυφο, καλό για βουνά και πεζοπορία.", mapSat: "Δορυφόρος", mapSatNote: "Sentinel-2, 2016, περίπου 10 μ. ανάλυση. Καλός για βουνά και βλάστηση, όχι για λεπτομέρειες δρόμων.", route: "Διαδρομή GPX", menuAbout: "Σχετικά", menuSupport: "Στήριξη",
     placesTitle: "Μετάβαση σε μέρος", placesSearch: "Αναζήτηση…", pts: n => `${n} σημεία`,
     legendDrink: "Πόσιμο νερό: σημεία που το OpenStreetMap δηλώνει ως πόσιμο νερό.",
     legendOther: "Πηγές και κάνουλες: το OpenStreetMap δεν λέει αν το νερό είναι πόσιμο. Έλεγξε πριν πιεις.",
@@ -252,7 +259,7 @@ const T = {
     title: "Νεράκι", ok: "OK", cancel: "Cancel",
     gDrink: "Drinking water", gOther: "Springs & taps",
     fountain: "Fountain", tap: "Tap", spring: "Spring", point: "Water point", bottle: "Bottle refill", free: "Free",
-    menuPlaces: "Places", menuMap: "Map type", menuAreas: "Browse by area", edit: "Edit", menuShare: "Share", copied: "Link copied", theme: "Theme", theme_auto: "Auto", theme_light: "Light", theme_dark: "Dark", mapStandard: "Standard", mapTerrain: "Terrain", mapTerrainNote: "Shaded relief, good for mountains and hiking.", mapSat: "Satellite", mapSatNote: "Sentinel-2, 2016, about 10 m resolution. Good for mountains and vegetation, not for street details.", route: "Route (GPX)", menuAbout: "About", menuSupport: "Support",
+    menuPlaces: "Places", menuMap: "Map type", menuAreas: "Browse by area", menuInstall: "Install app", offline: "You're offline. Showing saved data.", online: "Back online.", iosTip: "On iPhone: Share, then “Add to Home Screen”.", edit: "Edit", menuShare: "Share", copied: "Link copied", theme: "Theme", theme_auto: "Auto", theme_light: "Light", theme_dark: "Dark", mapStandard: "Standard", mapTerrain: "Terrain", mapTerrainNote: "Shaded relief, good for mountains and hiking.", mapSat: "Satellite", mapSatNote: "Sentinel-2, 2016, about 10 m resolution. Good for mountains and vegetation, not for street details.", route: "Route (GPX)", menuAbout: "About", menuSupport: "Support",
     placesTitle: "Jump to a place", placesSearch: "Search…", pts: n => `${n} points`,
     legendDrink: "Drinking water: points OpenStreetMap lists as drinking water.",
     legendOther: "Springs and taps: OpenStreetMap doesn't say if the water is drinkable. Check before you drink.",
@@ -329,7 +336,7 @@ const isDark = () => theme === "dark" || (theme === "auto" && darkQuery.matches)
 function applyTheme() { if (theme === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.dataset.theme = theme; }
 applyTheme();
 const styleUrl = () => "https://tiles.openfreemap.org/styles/" + ((isDark() || basemap === "satellite") ? "dark" : "liberty");
-const DROP_BLUE = "#0e6ba8", RING = "#0e9384";
+const DROP_BLUE = "#0d5eaf", RING = "#0e9384";
 const DROP_PATH = "M12 2C8 9 3 13.5 3 19A9 9 0 0 0 21 19C21 13.5 16 9 12 2Z";
 function dropSVG(grade, w = 12) {
   const solid = grade !== "other";
@@ -521,6 +528,21 @@ $("mShare").onclick = async () => {
 };
 $("mAbout").onclick = () => { setMenu(false); $("dlg").showModal(); };
 $("mSupport").onclick = () => setMenu(false);
+let installEvt = null;
+addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; $("mInstall").hidden = false; });
+addEventListener("appinstalled", () => { installEvt = null; $("mInstall").hidden = true; });
+$("mInstall").onclick = async () => {
+  setMenu(false);
+  if (!installEvt) return;
+  installEvt.prompt();
+  try { await installEvt.userChoice; } catch (e) {}
+  installEvt = null; $("mInstall").hidden = true;
+};
+addEventListener("offline", () => toast(t("offline")));
+addEventListener("online", () => toast(t("online")));
+if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+  addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
 $("closeDlg").onclick = () => $("dlg").close();
 $("grab").onclick = () => setSheet(!sheet.classList.contains("open"));
 
