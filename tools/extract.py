@@ -16,7 +16,7 @@ KEEP_TAGS = ("name", "name:el", "name:en", "drinking_water", "bottle", "fee",
 
 def classify(tags):
     """Return a coarse kind for a feature, or None if it isn't drinking water."""
-    if tags.get("drinking_water") == "no" or tags.get("access") == "private":
+    if tags.get("drinking_water") == "no" or tags.get("access") in ("private", "no"):
         return None
     if tags.get("amenity") == "drinking_water":
         return "fountain"

@@ -1,2 +1,5 @@
 *.pbf
+*.pbf.md5
 new.geojson
+__pycache__/
+.pytest_cache/
