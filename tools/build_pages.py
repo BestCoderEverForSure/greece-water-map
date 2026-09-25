@@ -75,6 +75,13 @@ def esc(x):
     return html.escape(str(x), quote=True)
 
 
+def json_for_script(obj):
+    """JSON that is safe inside a <script> element: names come from volunteer-edited map data."""
+    return (json.dumps(obj, ensure_ascii=False)
+            .replace("&", "\\u0026").replace("<", "\\u003c").replace(">", "\\u003e")
+            .replace("\u2028", "\\u2028").replace("\u2029", "\\u2029"))
+
+
 def page(lang, title, desc, canonical, body, base, crumbs, alts):
     x = TXT[lang]
     other = "en" if lang == "el" else "el"
@@ -96,7 +103,7 @@ def page(lang, title, desc, canonical, body, base, crumbs, alts):
 <meta property="og:url" content="{esc(canonical)}">
 <meta name="theme-color" content="#0d5eaf">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 30%27%3E%3Cpath d=%27M12 2C8 9 3 13.5 3 19A9 9 0 0 0 21 19C21 13.5 16 9 12 2Z%27 fill=%27%230d5eaf%27/%3E%3Ccircle cx=%2712%27 cy=%2719%27 r=%276.3%27 fill=%27%23ffffff%27/%3E%3Ccircle cx=%2712%27 cy=%2719%27 r=%274.5%27 fill=%27%235aa9e6%27/%3E%3Ccircle cx=%2712%27 cy=%2719%27 r=%272.4%27 fill=%27%230b2d5b%27/%3E%3C/svg%3E">
-<script type="application/ld+json">{json.dumps(ld, ensure_ascii=False)}</script>
+<script type="application/ld+json">{json_for_script(ld)}</script>
 <style>
 :root{{--bg:#f6f4ef;--fg:#14232b;--muted:#5d6a70;--line:#e0dcd2;--card:#fdfcf9;--accent:#0d5eaf;--other:#0e9384}}
 @media(prefers-color-scheme:dark){{:root{{--bg:#0f1a24;--fg:#e8eef3;--muted:#9db0c1;--line:#263644;--card:#16232f;--accent:#3d9bd8}}}}

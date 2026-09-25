@@ -17,16 +17,16 @@
 <meta property="og:description" content="Χάρτης με βρύσες, κάνουλες και πηγές. Neraki: a free map of drinking fountains, taps and springs in Greece.">
 <meta name="twitter:card" content="summary">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 30%27%3E%3Cpath d=%27M12 2C8 9 3 13.5 3 19A9 9 0 0 0 21 19C21 13.5 16 9 12 2Z%27 fill=%27%230d5eaf%27/%3E%3Ccircle cx=%2712%27 cy=%2719%27 r=%276.3%27 fill=%27%23ffffff%27/%3E%3Ccircle cx=%2712%27 cy=%2719%27 r=%274.5%27 fill=%27%235aa9e6%27/%3E%3Ccircle cx=%2712%27 cy=%2719%27 r=%272.4%27 fill=%27%230b2d5b%27/%3E%3C/svg%3E">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<link rel="stylesheet" href="vendor/maplibre-gl-4.7.1/maplibre-gl.css">
 <style>
   :root {
     --bg: #f6f4ef; --fg: #14232b; --muted: #5d6a70; --line: #e0dcd2; --card: #fdfcf9;
-    --drink: #0d5eaf; --other: #0e9384; --accent: #0d5eaf;
+    --drink: #0d5eaf; --other: #0e9384; --accent: #0d5eaf; --btn: #0d5eaf;
     --shadow: 0 2px 10px rgba(10, 30, 50, .18);
   }
-  :root[data-theme="dark"] { --bg: #0f1a24; --fg: #e8eef3; --muted: #9db0c1; --line: #263644; --card: #16232f; --accent: #3d9bd8; --shadow: 0 2px 12px rgba(0,0,0,.5); }
+  :root[data-theme="dark"] { --bg: #0f1a24; --fg: #e8eef3; --muted: #9db0c1; --line: #263644; --card: #16232f; --accent: #3d9bd8; --btn: #1a6ec2; --shadow: 0 2px 12px rgba(0,0,0,.5); }
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) { --bg: #0f1a24; --fg: #e8eef3; --muted: #9db0c1; --line: #263644; --card: #16232f; --accent: #3d9bd8; --shadow: 0 2px 12px rgba(0,0,0,.5); }
+    :root:not([data-theme="light"]) { --bg: #0f1a24; --fg: #e8eef3; --muted: #9db0c1; --line: #263644; --card: #16232f; --accent: #3d9bd8; --btn: #1a6ec2; --shadow: 0 2px 12px rgba(0,0,0,.5); }
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; }
@@ -60,9 +60,9 @@
 
   .nudge { align-self: flex-start; display: none; align-items: center; gap: 8px; background: var(--card); border-radius: 12px; padding: 7px 8px 7px 12px; box-shadow: var(--shadow); font-size: 13px; }
   .nudge.show { display: flex; }
-  .nudge button { border: 0; border-radius: 8px; background: var(--accent); color: #fff; padding: 4px 10px; font-weight: 600; }
+  .nudge button { border: 0; border-radius: 8px; background: var(--btn); color: #fff; padding: 4px 10px; font-weight: 600; }
 
-  .fab { position: absolute; right: 10px; bottom: 200px; z-index: 2; display: flex; align-items: center; gap: 6px; background: var(--accent); color: #fff; border: 0; border-radius: 999px; padding: 10px 14px; box-shadow: var(--shadow); font-weight: 600; }
+  .fab { position: absolute; right: 10px; bottom: 200px; z-index: 2; display: flex; align-items: center; gap: 6px; background: var(--btn); color: #fff; border: 0; border-radius: 999px; padding: 10px 14px; box-shadow: var(--shadow); font-weight: 600; }
   .fab:hover { filter: brightness(1.08); }
   .maplibregl-ctrl-bottom-right { bottom: 46px; }
 
@@ -89,7 +89,7 @@
   .rnote { color: var(--muted); margin-bottom: 6px; }
   .rbtns { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
   .rbtns button { border: 1.5px solid var(--line); background: none; border-radius: 999px; padding: 3px 10px; }
-  .rbtns button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .rbtns button[aria-pressed="true"] { background: var(--btn); border-color: var(--btn); color: #fff; }
   .rbtns .clear { margin-left: auto; }
   body.drag::after { content: "GPX"; position: fixed; inset: 0; z-index: 9; display: grid; place-items: center; font-size: 42px; font-weight: 700; color: #fff; background: rgba(20,120,212,.55); }
 
@@ -105,7 +105,7 @@
   .badge { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
   .pop .links { margin-top: 8px; display: flex; gap: 12px; flex-wrap: wrap; font-size: 13px; }
   .pop a { color: var(--accent); }
-  .pop .dir { display: inline-block; margin-top: 8px; background: var(--accent); color: #fff !important; text-decoration: none; padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 13px; }
+  .pop .dir { display: inline-block; margin-top: 8px; background: var(--btn); color: #fff !important; text-decoration: none; padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 13px; }
 
   /* dialogs */
   dialog { border: 0; border-radius: 16px; padding: 18px 20px; width: min(420px, 92vw); background: var(--card); color: var(--fg); box-shadow: var(--shadow); }
@@ -113,7 +113,7 @@
   dialog h2 { margin: 0 0 8px; font-size: 17px; }
   dialog p, dialog li { color: var(--muted); }
   dialog .row { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
-  .primary { background: var(--accent); color: #fff; border: 0; border-radius: 10px; padding: 8px 14px; font-weight: 600; text-decoration: none; }
+  .primary { background: var(--btn); color: #fff; border: 0; border-radius: 10px; padding: 8px 14px; font-weight: 600; text-decoration: none; }
   .opts { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
   .opts label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
   .opts input { margin-top: 4px; }
@@ -161,7 +161,7 @@
 <div class="toast" id="toast" role="status"></div>
 <div class="foot">© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a></div>
 
-<section class="sheet" id="sheet" aria-live="polite">
+<section class="sheet" id="sheet">
   <button class="grab" id="grab"><span id="sheetTitle"></span><svg id="chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
   <div class="rctl" id="rctl" hidden>
     <div class="rsum" id="rsum"></div>
@@ -213,7 +213,7 @@
   <div class="row"><button class="primary" id="closeDlg" data-i="ok"></button></div>
 </dialog>
 
-<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="vendor/maplibre-gl-4.7.1/maplibre-gl.js"></script>
 <script>
 "use strict";
 // Optional integrations. Fill these in to switch them on (empty = off).
@@ -232,7 +232,7 @@ const T = {
     title: "Νεράκι", ok: "ΟΚ", cancel: "Άκυρο",
     gDrink: "Πόσιμο νερό", gOther: "Πηγές & κάνουλες",
     fountain: "Βρύση", tap: "Κάνουλα", spring: "Πηγή", point: "Σημείο νερού", bottle: "Γέμισμα μπουκαλιού", free: "Δωρεάν",
-    menuPlaces: "Μέρη", menuMap: "Τύπος χάρτη", menuAreas: "Λίστα ανά περιοχή", menuInstall: "Εγκατάσταση εφαρμογής", offline: "Χωρίς σύνδεση. Δείχνουμε τα δεδομένα που έχουν αποθηκευτεί.", online: "Ξανά online.", iosTip: "Στο iPhone: Κοινοποίηση, μετά «Προσθήκη στην αρχική οθόνη».", edit: "Επεξεργασία", menuShare: "Κοινοποίηση", copied: "Ο σύνδεσμος αντιγράφηκε", theme: "Θέμα", theme_auto: "Αυτόματο", theme_light: "Φωτεινό", theme_dark: "Σκούρο", mapStandard: "Κανονικός", mapTerrain: "Ανάγλυφο", mapTerrainNote: "Σκιασμένο ανάγλυφο, καλό για βουνά και πεζοπορία.", mapSat: "Δορυφόρος", mapSatNote: "Sentinel-2, 2016, περίπου 10 μ. ανάλυση. Καλός για βουνά και βλάστηση, όχι για λεπτομέρειες δρόμων.", route: "Διαδρομή GPX", menuAbout: "Σχετικά", menuSupport: "Στήριξη",
+    menuPlaces: "Μέρη", menuMap: "Τύπος χάρτη", menuAreas: "Λίστα ανά περιοχή", menuInstall: "Εγκατάσταση εφαρμογής", offline: "Χωρίς σύνδεση. Δείχνουμε τα δεδομένα που έχουν αποθηκευτεί.", dataFail: "Δεν φόρτωσαν τα σημεία. Έλεγξε τη σύνδεση και ξαναδοκίμασε.", retry: "Ξαναδοκίμασε", stillLoading: "Τα σημεία φορτώνουν ακόμα. Δοκίμασε ξανά σε λίγο.", gpxTooBig: "Το αρχείο είναι πολύ μεγάλο (όριο 25 MB).", online: "Ξανά online.", iosTip: "Στο iPhone: Κοινοποίηση, μετά «Προσθήκη στην αρχική οθόνη».", edit: "Επεξεργασία", menuShare: "Κοινοποίηση", copied: "Ο σύνδεσμος αντιγράφηκε", theme: "Θέμα", theme_auto: "Αυτόματο", theme_light: "Φωτεινό", theme_dark: "Σκούρο", mapStandard: "Κανονικός", mapTerrain: "Ανάγλυφο", mapTerrainNote: "Σκιασμένο ανάγλυφο, καλό για βουνά και πεζοπορία.", mapSat: "Δορυφόρος", mapSatNote: "Sentinel-2, 2016, περίπου 10 μ. ανάλυση. Καλός για βουνά και βλάστηση, όχι για λεπτομέρειες δρόμων.", route: "Διαδρομή GPX", menuAbout: "Σχετικά", menuSupport: "Στήριξη",
     placesTitle: "Μετάβαση σε μέρος", placesSearch: "Αναζήτηση…", pts: n => `${n} σημεία`,
     legendDrink: "Πόσιμο νερό: σημεία που εθελοντές του χάρτη έχουν σημειώσει ως πόσιμο νερό.",
     legendOther: "Πηγές και κάνουλες: δεν αναφέρεται αν το νερό είναι πόσιμο. Έλεγξε πριν πιεις.",
@@ -244,7 +244,7 @@ const T = {
     locFail: "Δεν βρέθηκε η τοποθεσία σου. Έλεγξε τα δικαιώματα του browser.",
     outside: "Φαίνεται ότι είσαι εκτός Ελλάδας. Δείχνουμε την Αθήνα.",
     points: n => n.toLocaleString("el") + " σημεία",
-    drinkable: "Νερό", drinkableYes: "σημειωμένο ως πόσιμο", drinkableListed: "σημειωμένο ως πόσιμο από εθελοντές, δεν έχει ελεγχθεί", drinkableUnknown: "δεν αναφέρεται αν είναι πόσιμο",
+    drinkable: "Νερό", drinkableYes: "σημειωμένο ως πόσιμο από εθελοντές, δεν έχει ελεγχθεί", drinkableListed: "σημειωμένο ως πόσιμο από εθελοντές, δεν έχει ελεγχθεί", drinkableUnknown: "δεν αναφέρεται αν είναι πόσιμο",
     seasonal: "Εποχιακό", fee: "Χρέωση", hours: "Ώρες", note: "Σημείωση", checked: "Τελευταίος έλεγχος", away: "από εσένα",
     viewOsm: "Περισσότερες λεπτομέρειες", report: "Πρόβλημα / λείπει κάτι;", directions: "Οδηγίες", streetView: "Street View", km: "χλμ", m: "μ",
     routeTitle: "Κατά μήκος της διαδρομής", within: "Απόσταση:", clearRoute: "Καθαρισμός", routeErr: "Δεν βρέθηκε διαδρομή σε αυτό το αρχείο GPX.",
@@ -261,7 +261,7 @@ const T = {
     title: "Νεράκι", ok: "OK", cancel: "Cancel",
     gDrink: "Drinking water", gOther: "Springs & taps",
     fountain: "Fountain", tap: "Tap", spring: "Spring", point: "Water point", bottle: "Bottle refill", free: "Free",
-    menuPlaces: "Places", menuMap: "Map type", menuAreas: "Browse by area", menuInstall: "Install app", offline: "You're offline. Showing saved data.", online: "Back online.", iosTip: "On iPhone: Share, then “Add to Home Screen”.", edit: "Edit", menuShare: "Share", copied: "Link copied", theme: "Theme", theme_auto: "Auto", theme_light: "Light", theme_dark: "Dark", mapStandard: "Standard", mapTerrain: "Terrain", mapTerrainNote: "Shaded relief, good for mountains and hiking.", mapSat: "Satellite", mapSatNote: "Sentinel-2, 2016, about 10 m resolution. Good for mountains and vegetation, not for street details.", route: "Route (GPX)", menuAbout: "About", menuSupport: "Support",
+    menuPlaces: "Places", menuMap: "Map type", menuAreas: "Browse by area", menuInstall: "Install app", offline: "You're offline. Showing saved data.", dataFail: "The points didn't load. Check your connection and try again.", retry: "Try again", stillLoading: "The points are still loading. Try again in a moment.", gpxTooBig: "That file is too large (limit 25 MB).", online: "Back online.", iosTip: "On iPhone: Share, then “Add to Home Screen”.", edit: "Edit", menuShare: "Share", copied: "Link copied", theme: "Theme", theme_auto: "Auto", theme_light: "Light", theme_dark: "Dark", mapStandard: "Standard", mapTerrain: "Terrain", mapTerrainNote: "Shaded relief, good for mountains and hiking.", mapSat: "Satellite", mapSatNote: "Sentinel-2, 2016, about 10 m resolution. Good for mountains and vegetation, not for street details.", route: "Route (GPX)", menuAbout: "About", menuSupport: "Support",
     placesTitle: "Jump to a place", placesSearch: "Search…", pts: n => `${n} points`,
     legendDrink: "Drinking water: points that map volunteers have marked as drinking water.",
     legendOther: "Springs and taps: it isn't stated whether the water is drinkable. Check before you drink.",
@@ -273,7 +273,7 @@ const T = {
     locFail: "Couldn't get your location. Check your browser permissions.",
     outside: "You seem to be outside Greece. Showing Athens.",
     points: n => n.toLocaleString("en") + " points",
-    drinkable: "Water", drinkableYes: "tagged as drinkable", drinkableListed: "marked as drinking water by volunteers, not verified", drinkableUnknown: "not stated whether it's drinkable",
+    drinkable: "Water", drinkableYes: "marked as drinking water by volunteers, not verified", drinkableListed: "marked as drinking water by volunteers, not verified", drinkableUnknown: "not stated whether it's drinkable",
     seasonal: "Seasonal", fee: "Fee", hours: "Hours", note: "Note", checked: "Last checked", away: "away",
     viewOsm: "More details", report: "Problem / missing one?", directions: "Directions", streetView: "Street View", km: "km", m: "m",
     routeTitle: "Along the route", within: "Within:", clearRoute: "Clear", routeErr: "No route found in that GPX file.",
@@ -373,7 +373,9 @@ geolocate.on("geolocate", e => {
     else renderList();
     return;
   }
-  userPos = p; renderList();
+  const moved = !userPos || haversine(userPos, p) > 15;
+  userPos = p;
+  if (moved || firstFix || wantSheet) renderList();   // GPS fixes arrive about once a second; don't rebuild the list for jitter
   if (firstFix || wantSheet) setSheet(true);
   firstFix = false; wantSheet = false;
 });
@@ -488,9 +490,11 @@ function popupNode(f) {
   return div;
 }
 
+let popup = null;
 function focusOn(f) {
   map.flyTo({ center: f.geometry.coordinates, zoom: Math.max(map.getZoom(), 16) });
-  new maplibregl.Popup({ offset: { bottom: [0, -30], "bottom-left": [0, -30], "bottom-right": [0, -30], top: [0, 6], "top-left": [0, 6], "top-right": [0, 6], left: [8, -15], right: [-8, -15], center: [0, 0] } }).setLngLat(f.geometry.coordinates).setDOMContent(popupNode(f)).addTo(map);
+  if (popup) popup.remove();
+  popup = new maplibregl.Popup({ offset: { bottom: [0, -30], "bottom-left": [0, -30], "bottom-right": [0, -30], top: [0, 6], "top-left": [0, 6], "top-right": [0, 6], left: [8, -15], right: [-8, -15], center: [0, 0] } }).setLngLat(f.geometry.coordinates).setDOMContent(popupNode(f)).addTo(map);
 }
 
 // ---- "missing a fountain?" and the low-coverage nudge
@@ -568,6 +572,7 @@ $("mInstall").onclick = async () => {
   installEvt = null; $("mInstall").hidden = true;
 };
 addEventListener("offline", () => toast(t("offline")));
+if (!navigator.onLine) setTimeout(() => toast(t("offline")), 800);
 addEventListener("online", () => toast(t("online")));
 if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
   addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
@@ -585,7 +590,7 @@ function parseGpx(text) {
   let pts = [...doc.getElementsByTagName("trkpt")];
   if (!pts.length) pts = [...doc.getElementsByTagName("rtept")];
   const coords = pts.map(p => [parseFloat(p.getAttribute("lon")), parseFloat(p.getAttribute("lat"))])
-    .filter(c => isFinite(c[0]) && isFinite(c[1]));
+    .filter(([lon, lat]) => isFinite(lon) && isFinite(lat) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180);
   return coords.length >= 2 ? coords : null;
 }
 
@@ -664,8 +669,8 @@ function setRouteOnMap() {
 
 function loadGpxText(text) {
   const full = parseGpx(text);
+  if (!data) { toast(t("stillLoading")); return; }
   if (!full) { toast(t("routeErr")); return; }
-  if (!data) return;
   route = buildRoute(full);
   setRouteOnMap(); computeHits(); renderList(); setSheet(true);
   const b = route.coords.reduce((bb, c) => bb.extend(c), new maplibregl.LngLatBounds(route.coords[0], route.coords[0]));
@@ -679,7 +684,12 @@ function clearRoute() {
   renderList();
 }
 
-async function handleGpxFile(file) { if (file) loadGpxText(await file.text()); }
+const GPX_MAX_BYTES = 25 * 1024 * 1024;
+async function handleGpxFile(file) {
+  if (!file) return;
+  if (file.size > GPX_MAX_BYTES) { toast(t("gpxTooBig")); return; }
+  try { loadGpxText(await file.text()); } catch (e) { toast(t("routeErr")); }
+}
 $("gpxIn").onchange = e => { handleGpxFile(e.target.files[0]); e.target.value = ""; };
 $("rclear").onclick = clearRoute;
 addEventListener("dragover", e => { e.preventDefault(); document.body.classList.add("drag"); });
@@ -791,10 +801,28 @@ for (const l of ["clusters", "points"]) {
 }
 
 // ---- data: fetched in parallel with the base map and drawn as soon as the style is ready
-const dataReady = fetch("water.geojson").then(r => r.json());
-let firstStyle = true;
+const dataReady = fetch("water.geojson")
+  .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+  .then(d => {
+    if (!d || !Array.isArray(d.features)) throw new Error("bad data");
+    d.features = d.features.filter(f => f && f.properties && f.geometry && Array.isArray(f.geometry.coordinates)
+      && isFinite(f.geometry.coordinates[0]) && isFinite(f.geometry.coordinates[1]));
+    return d;
+  });
+dataReady.catch(() => {});                              // reported in the style.load handler
+let firstStyle = true, styleGen = 0;
 map.on("style.load", async () => {
-  try { data = data || await dataReady; } catch (e) { $("count").textContent = "⚠"; return; }
+  const gen = ++styleGen;
+  try { data = data || await dataReady; }
+  catch (e) {
+    $("count").textContent = "⚠";
+    toast(t("dataFail"));
+    const b = document.createElement("button"); b.className = "locbtn"; b.textContent = t("retry");
+    b.onclick = () => location.reload();
+    $("list").replaceChildren(b); setSheet(true);
+    return;
+  }
+  if (gen !== styleGen) return;                          // the theme or map type changed while we waited
   if (firstStyle) { for (const f of data.features) f.properties.grade = gradeOf(f.properties); countPlaces(); }
   tidyBaseStyle();
   applyBasemapExtras();
