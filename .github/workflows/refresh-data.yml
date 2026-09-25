@@ -38,7 +38,7 @@ jobs:
           test "$(stat -c%s greece.osm.pbf)" -gt 200000000
 
       - name: Build new data file
-        run: python tools/extract.py greece.osm.pbf new.geojson
+        run: python tools/extract.py greece.osm.pbf new.geojson tools/areas.geojson   # drops points outside Greece
 
       - name: Sanity check and compare with current data
         id: cmp

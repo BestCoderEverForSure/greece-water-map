@@ -5,7 +5,7 @@ import re
 
 import pytest
 
-from conftest import load
+from conftest import AREAS, load
 
 GREECE = (19.0, 34.5, 30.0, 42.0)   # lon/lat box with a margin
 
@@ -53,6 +53,19 @@ def test_water_data_sane(site):
         assert p.get("drinking_water") != "no" and p.get("access") not in ("private", "no")
         assert re.fullmatch(r"[nw]\d+", p["osm"]) and p["osm"] not in seen
         seen.add(p["osm"])
+
+
+def test_water_data_inside_greece(site):
+    if not AREAS.exists():
+        pytest.skip("no areas file")
+    from shapely.geometry import Point, shape
+    from shapely.prepared import prep
+    country = [a for a in json.loads(AREAS.read_text(encoding="utf-8"))["features"] if a["properties"]["level"] == "country"]
+    assert len(country) == 1
+    inside = prep(shape(country[0]["geometry"]))
+    outside = [f["properties"]["osm"] for f in json.loads((site / "water.geojson").read_text(encoding="utf-8"))["features"]
+               if not inside.contains(Point(*f["geometry"]["coordinates"]))]
+    assert not outside, f"{len(outside)} points outside Greece, e.g. {outside[:5]}"
 
 
 def generated(site):

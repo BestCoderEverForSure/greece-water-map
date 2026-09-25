@@ -1,6 +1,8 @@
 """Filter drinking-water points out of a Geofabrik OSM extract into GeoJSON.
 
-Usage: .venv/bin/python extract.py data/greece.osm.pbf data/water.geojson
+Usage: .venv/bin/python extract.py data/greece.osm.pbf data/water.geojson [areas.geojson]
+With areas.geojson (from build_areas.py), points outside Greece's national boundary are dropped: the download
+includes a strip of the neighbouring countries.
 Data © OpenStreetMap contributors (ODbL).
 """
 import datetime
@@ -31,8 +33,22 @@ def classify(tags):
     return None
 
 
-def main(src, dst):
+def greece_filter(areas_path):
+    """A function point -> bool that is True inside Greece (land and territorial waters)."""
+    from shapely.geometry import Point, shape
+    from shapely.prepared import prep
+    areas = json.load(open(areas_path, encoding="utf-8"))["features"]
+    country = [a for a in areas if a["properties"].get("level") == "country"]
+    if len(country) != 1:
+        raise SystemExit(f"expected one country boundary in {areas_path}, found {len(country)}")
+    inside = prep(shape(country[0]["geometry"]))
+    return lambda lon, lat: inside.contains(Point(lon, lat))
+
+
+def main(src, dst, areas_path=None):
     feats = []
+    in_greece = greece_filter(areas_path) if areas_path else None
+    outside = 0
     fp = (osmium.FileProcessor(src, osmium.osm.NODE | osmium.osm.WAY)
           .with_locations()
           .with_filter(osmium.filter.KeyFilter("amenity", "man_made", "natural", "tourism", "drinking_water")))
@@ -50,6 +66,9 @@ def main(src, dst):
                 continue
             lon = sum(p[0] for p in pts) / len(pts)
             lat = sum(p[1] for p in pts) / len(pts)
+        if in_greece and not in_greece(lon, lat):
+            outside += 1
+            continue
         props = {k: o.tags[k] for k in KEEP_TAGS if k in o.tags}
         props["kind"] = kind
         props["osm"] = ("n" if o.is_node() else "w") + str(o.id)
@@ -61,8 +80,8 @@ def main(src, dst):
     by = {}
     for ft in feats:
         by[ft["properties"]["kind"]] = by.get(ft["properties"]["kind"], 0) + 1
-    print(len(feats), "features", by)
+    print(len(feats), "features", by, f"(dropped {outside} outside Greece)" if in_greece else "")
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2])
+    main(*sys.argv[1:4])

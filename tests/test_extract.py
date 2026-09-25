@@ -47,6 +47,17 @@ OSM = """<?xml version="1.0" encoding="UTF-8"?>
 """
 
 
+def test_points_outside_greece_are_dropped(tmp_path):
+    src, dst, areas = tmp_path / "t.osm", tmp_path / "w.geojson", tmp_path / "a.geojson"
+    src.write_text(OSM, encoding="utf-8")
+    box = {"type": "Polygon", "coordinates": [[[23.0, 37.0], [24.5, 37.0], [24.5, 38.5], [23.0, 38.5], [23.0, 37.0]]]}
+    areas.write_text(json.dumps({"type": "FeatureCollection", "features": [
+        {"type": "Feature", "geometry": box, "properties": {"level": "country"}}]}))
+    extract.main(str(src), str(dst), str(areas))
+    kept = {f["properties"]["osm"] for f in json.loads(dst.read_text())["features"]}
+    assert kept == {"n1", "w20"}                                      # the spring at 21°E lies outside the box
+
+
 def test_extract_end_to_end(tmp_path):
     src, dst = tmp_path / "t.osm", tmp_path / "w.geojson"
     src.write_text(OSM, encoding="utf-8")

@@ -13,11 +13,13 @@ from shapely.geometry import mapping
 from shapely.ops import unary_union
 
 LEVELS = {"6": "unit", "7": "municipality"}   # Greece: 5 = region, 6 = regional unit, 7 = municipality
+# Greece's national boundary (it includes territorial waters) is kept too, as level "country". It is only used to
+# drop points from neighbouring countries that the download's buffer includes; the app never draws it.
 
 
 def main(src, dst):
     wkb = osmium.geom.WKBFactory()
-    feats, raw = [], []
+    feats, raw, country = [], [], None
     fp = (osmium.FileProcessor(src, osmium.osm.RELATION | osmium.osm.NODE | osmium.osm.WAY)
           .with_areas(osmium.filter.TagFilter(("boundary", "administrative"))))
     for o in fp:
@@ -25,6 +27,12 @@ def main(src, dst):
             continue
         t = o.tags
         lvl = t.get("admin_level")
+        if lvl == "2" and t.get("ISO3166-1") == "GR":
+            geom = shapely.from_wkb(bytes.fromhex(wkb.create_multipolygon(o))).simplify(0.0005, preserve_topology=True)
+            country = {"type": "Feature", "geometry": mapping(geom),
+                       "properties": {"level": "country", "rel": o.orig_id(), "iso": "GR", "name": t.get("name", ""),
+                                      "name_el": t.get("name:el", ""), "name_en": t.get("name:en", "")}}
+            continue
         if t.get("boundary") != "administrative" or lvl not in LEVELS:
             continue
         try:
@@ -49,6 +57,9 @@ def main(src, dst):
         if ok:
             feats.append({"type": "Feature", "geometry": mapping(geom), "properties": pr})
     feats.sort(key=lambda f: (f["properties"]["level"], f["properties"]["name_el"]))
+    if country is None:
+        raise SystemExit("Greece's national boundary was not found in the extract")
+    feats.insert(0, country)
     with open(dst, "w") as f:
         json.dump({"type": "FeatureCollection", "features": feats}, f, ensure_ascii=False, separators=(",", ":"))
     by = {}

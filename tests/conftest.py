@@ -8,6 +8,7 @@ import pytest
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 TOOLS = ROOT / "tools" if (ROOT / "tools" / "build_pages.py").exists() else ROOT
 SITE = ROOT if (ROOT / "index.html").exists() else ROOT / "web"
+AREAS = TOOLS / "areas.geojson" if (TOOLS / "areas.geojson").exists() else ROOT / "data" / "areas.geojson"
 
 
 def load(name):
