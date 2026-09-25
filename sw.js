@@ -10,7 +10,7 @@ const KEEP = new Set([SHELL, DATA, LIBS, TILES]);
 const MAX_TILES = 700;
 const SLOW_MS = 6000;         // after this long without a network answer, use the saved copy if there is one
 const LIB = "./vendor/maplibre-gl-4.7.1/";
-const PRECACHE = ["./", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./water.geojson",
+const PRECACHE = ["./", "./app.js", "./app.css", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./water.geojson",
                   LIB + "maplibre-gl.js", LIB + "maplibre-gl.css"];
 const TILE_HOSTS = new Set(["tiles.openfreemap.org", "s3.amazonaws.com", "tiles.maps.eox.at"]);
 
