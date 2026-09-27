@@ -26,7 +26,7 @@ DIRS = {"el": "vryses", "en": "en/areas"}
 
 TXT = {
     "el": {
-        "lang": "el", "switch": "English", "areas": "Περιοχές", "brand": "Νεράκι",
+        "lang": "el", "switch": "English", "areas": "Περιοχές", "brand": "Κρήνη",
         "kinds": {"fountain": "Βρύση", "tap": "Κάνουλα", "spring": "Πηγή", "point": "Σημείο νερού"},
         "free": "Δωρεάν", "bottle": "Γέμισμα μπουκαλιού", "fallback_point": "Σημείο",
         "footer": "Τα δεδομένα είναι από το OpenStreetMap, έναν ανοιχτό χάρτη που φτιάχνουν εθελοντές (© OpenStreetMap contributors, ODbL). Το νερό δεν είναι εγγυημένα ασφαλές: οι πληροφορίες προέρχονται από εθελοντές και δεν έχουν ελεγχθεί από εμάς. Αν δεν είσαι σίγουρος, ρώτα ή πάρε δικό σου νερό.",
@@ -35,7 +35,7 @@ TXT = {
         "h_munis": "Δήμοι", "h_neigh": "Γειτονικοί δήμοι στην ίδια ενότητα", "h_missing": "Λείπει κάποια βρύση;",
     },
     "en": {
-        "lang": "en", "switch": "Ελληνικά", "areas": "Areas", "brand": "Νεράκι",
+        "lang": "en", "switch": "Ελληνικά", "areas": "Areas", "brand": "Κρήνη",
         "kinds": {"fountain": "Fountain", "tap": "Tap", "spring": "Spring", "point": "Water point"},
         "free": "Free", "bottle": "Bottle refill", "fallback_point": "Point",
         "footer": "Data is from OpenStreetMap, an open map made by volunteers (© OpenStreetMap contributors, ODbL). Water isn't guaranteed safe: the information comes from volunteers and isn't checked by us. If you're unsure, ask locally or carry your own water.",
@@ -213,7 +213,7 @@ def main(water_path, areas_path, out_dir, base="https://bestcodereverforsure.git
         z = 12 if a["level"] == "unit" else 14
         if lang == "el":
             where = "στην " + name if a["level"] == "unit" else "στον " + name.replace("Δήμος ", "Δήμο ", 1)   # accusative after the preposition
-            title = f"Πόσιμο νερό και βρύσες: {name} | Νεράκι"
+            title = f"Πόσιμο νερό και βρύσες: {name} | Κρήνη"
             desc = f"{total} γνωστά σημεία με πόσιμο νερό (βρύσες, κάνουλες, πηγές) {where}. Λίστα και χάρτης, με δεδομένα από το OpenStreetMap."
             h1 = f"Πόσιμο νερό: {name}"
             lead = f"{total} γνωστά σημεία {where}, από τα οποία {drink} δηλώνονται ως πόσιμο νερό στα δεδομένα του χάρτη."
@@ -222,7 +222,7 @@ def main(water_path, areas_path, out_dir, base="https://bestcodereverforsure.git
                     f'και πάτα «Λείπει βρύση;» για να το αναφέρεις. Τα δεδομένα ενημερώνονται κάθε εβδομάδα'
                     f'{(" (τελευταία ενημέρωση: " + esc(generated) + ")") if generated else ""}.')
         else:
-            title = f"Drinking water and fountains in {name} | Neraki"
+            title = f"Drinking water and fountains in {name} | Krini"
             desc = f"{total} known drinking-water points (fountains, taps, springs) in {name}. List and map, with data from OpenStreetMap."
             h1 = f"Drinking water: {name}"
             lead = f"{total} known points in {name}, {drink} of them marked as drinking water in the map data."
@@ -278,12 +278,12 @@ def main(water_path, areas_path, out_dir, base="https://bestcodereverforsure.git
         rows = sorted(unit_rows, key=lambda kv: kv[1][lang])
         home = base if lang == "el" else base + "?lang=en"
         if lang == "el":
-            title, desc = "Πόσιμο νερό στην Ελλάδα ανά περιοχή | Νεράκι", f"{total_pts} βρύσες, κάνουλες και πηγές πόσιμου νερού στην Ελλάδα, ανά περιφερειακή ενότητα και δήμο."
+            title, desc = "Πόσιμο νερό στην Ελλάδα ανά περιοχή | Κρήνη", f"{total_pts} βρύσες, κάνουλες και πηγές πόσιμου νερού στην Ελλάδα, ανά περιφερειακή ενότητα και δήμο."
             h1 = "Πόσιμο νερό στην Ελλάδα, ανά περιοχή"
             lead = f"{total_pts} γνωστά σημεία με βρύσες, κάνουλες και πηγές, ταξινομημένα ανά περιφερειακή ενότητα και δήμο. Δεδομένα από το OpenStreetMap, ενημερωμένα κάθε εβδομάδα."
             h2 = "Περιφερειακές ενότητες"
         else:
-            title, desc = "Drinking water in Greece by area | Neraki", f"{total_pts} drinking fountains, taps and springs in Greece, by regional unit and municipality."
+            title, desc = "Drinking water in Greece by area | Krini", f"{total_pts} drinking fountains, taps and springs in Greece, by regional unit and municipality."
             h1 = "Drinking water in Greece, by area"
             lead = f"{total_pts} known fountains, taps and springs, sorted by regional unit and municipality. Data from OpenStreetMap, refreshed every week."
             h2 = "Regional units"

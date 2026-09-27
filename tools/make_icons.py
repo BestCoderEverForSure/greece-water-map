@@ -1,4 +1,4 @@
-"""Render the Neraki app icons (an evil-eye water drop on the Greek-flag blue) with Pillow.
+"""Render the Krini app icons (an evil-eye water drop on the Greek-flag blue) with Pillow.
 Usage: python make_icons.py web/icons"""
 import math
 import sys

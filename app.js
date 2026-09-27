@@ -5,7 +5,7 @@ const startedWithHash = location.hash.length > 1;
 
 const T = {
   el: {
-    title: "Νεράκι", ok: "ΟΚ", cancel: "Άκυρο",
+    title: "Κρήνη", ok: "ΟΚ", cancel: "Άκυρο",
     gDrink: "Πόσιμο νερό", gOther: "Πηγές & κάνουλες",
     fountain: "Βρύση", tap: "Κάνουλα", spring: "Πηγή", point: "Σημείο νερού", bottle: "Γέμισμα μπουκαλιού", free: "Δωρεάν",
     menuPlaces: "Μέρη", menuMap: "Τύπος χάρτη", menuAreas: "Λίστα ανά περιοχή", menuInstall: "Εγκατάσταση εφαρμογής", offline: "Χωρίς σύνδεση. Δείχνουμε τα δεδομένα που έχουν αποθηκευτεί.", dataFail: "Δεν φόρτωσαν τα σημεία. Έλεγξε τη σύνδεση και ξαναδοκίμασε.", retry: "Ξαναδοκίμασε", stillLoading: "Τα σημεία φορτώνουν ακόμα. Δοκίμασε ξανά σε λίγο.", gpxTooBig: "Το αρχείο είναι πολύ μεγάλο (όριο 25 MB).", online: "Ξανά online.", iosTip: "Στο iPhone: Κοινοποίηση, μετά «Προσθήκη στην αρχική οθόνη».", edit: "Επεξεργασία", menuShare: "Κοινοποίηση", copied: "Ο σύνδεσμος αντιγράφηκε", theme: "Θέμα", theme_auto: "Αυτόματο", theme_light: "Φωτεινό", theme_dark: "Σκούρο", mapStandard: "Κανονικός", mapTerrain: "Ανάγλυφο", mapTerrainNote: "Σκιασμένο ανάγλυφο, καλό για βουνά και πεζοπορία.", mapSat: "Δορυφόρος", mapSatNote: "Sentinel-2, 2016, περίπου 10 μ. ανάλυση. Καλός για βουνά και βλάστηση, όχι για λεπτομέρειες δρόμων.", route: "Διαδρομή GPX", menuAbout: "Σχετικά", menuSupport: "Στήριξη",
@@ -35,7 +35,7 @@ const T = {
     updated: "Δεδομένα από", donate: "Σου αρέσει ο χάρτης; Κέρασε έναν καφέ", statsNote: "Μετράμε τις επισκέψεις με το Cloudflare Web Analytics, χωρίς cookies και χωρίς να σε παρακολουθούμε σε άλλες σελίδες.", feedback: "Σχόλια ή προβλήματα στη σελίδα",
   },
   en: {
-    title: "Νεράκι", ok: "OK", cancel: "Cancel",
+    title: "Κρήνη", ok: "OK", cancel: "Cancel",
     gDrink: "Drinking water", gOther: "Springs & taps",
     fountain: "Fountain", tap: "Tap", spring: "Spring", point: "Water point", bottle: "Bottle refill", free: "Free",
     menuPlaces: "Places", menuMap: "Map type", menuAreas: "Browse by area", menuInstall: "Install app", offline: "You're offline. Showing saved data.", dataFail: "The points didn't load. Check your connection and try again.", retry: "Try again", stillLoading: "The points are still loading. Try again in a moment.", gpxTooBig: "That file is too large (limit 25 MB).", online: "Back online.", iosTip: "On iPhone: Share, then “Add to Home Screen”.", edit: "Edit", menuShare: "Share", copied: "Link copied", theme: "Theme", theme_auto: "Auto", theme_light: "Light", theme_dark: "Dark", mapStandard: "Standard", mapTerrain: "Terrain", mapTerrainNote: "Shaded relief, good for mountains and hiking.", mapSat: "Satellite", mapSatNote: "Sentinel-2, 2016, about 10 m resolution. Good for mountains and vegetation, not for street details.", route: "Route (GPX)", menuAbout: "About", menuSupport: "Support",

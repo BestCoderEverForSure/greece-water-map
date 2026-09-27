@@ -1,10 +1,10 @@
 "use strict";
-/* Service worker for Νεράκι.
+/* Service worker for Κρήνη.
    Rule of thumb: anything that changes (the pages, the app code, the weekly water data) is fetched from the network
    first and only falls back to the saved copy when offline or very slow. Only things that never change (icons, the
    pinned map library, map tiles) are served from the cache first. Bump VERSION to throw away every saved copy on the
    next visit. Saving to the cache is best effort: a full disk must never break a request that the network answered. */
-const VERSION = "v2";
+const VERSION = "v3";
 const SHELL = `shell-${VERSION}`, DATA = `data-${VERSION}`, LIBS = `libs-${VERSION}`, TILES = `tiles-${VERSION}`;
 const KEEP = new Set([SHELL, DATA, LIBS, TILES]);
 const MAX_TILES = 700;

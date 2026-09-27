@@ -1,4 +1,4 @@
-# Νεράκι (Neraki): Greece drinking-water map
+# Κρήνη: Greece drinking-water map
 
 A free map of drinking fountains, taps and springs in Greece (prototype).
 
